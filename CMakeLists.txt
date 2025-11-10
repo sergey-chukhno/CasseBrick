@@ -24,6 +24,14 @@ find_package(SFML 3.0 COMPONENTS Graphics Audio REQUIRED)
 # Source files
 set(SOURCES
     src/main.cpp
+    src/core/GameState.cpp
+    src/core/Game.cpp
+    src/core/FontManager.cpp
+    src/core/states/MenuState.cpp
+    src/core/states/PlayingState.cpp
+    src/core/states/PausedState.cpp
+    src/core/states/GameOverState.cpp
+    src/core/states/SettingsState.cpp
 )
 
 # Create executable
