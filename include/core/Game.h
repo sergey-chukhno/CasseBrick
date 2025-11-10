@@ -71,6 +71,16 @@ public:
     void changeState(std::unique_ptr<GameState> state);
 
     /**
+     * @brief Queues a state change to be executed after event handling.
+     * 
+     * This is safe to call from within event handlers (like button callbacks).
+     * The state change will be processed at the end of the current frame.
+     * 
+     * @param state Unique pointer to the new state
+     */
+    void queueStateChange(std::unique_ptr<GameState> state);
+
+    /**
      * @brief Gets a pointer to the current state.
      * @return Pointer to the current state, or nullptr if no state exists
      */
@@ -112,9 +122,23 @@ private:
     // State stack
     std::vector<std::unique_ptr<GameState>> stateStack_;
 
+    // Pending state changes (processed after event handling)
+    std::unique_ptr<GameState> pendingStateChange_;
+
     // Game loop control
     bool running_;
     sf::Clock clock_;  // For delta time calculation
+
+    // Fade transition
+    float fadeAlpha_;           // Current fade alpha (0.0 to 1.0)
+    float fadeSpeed_;           // Fade speed (alpha per second)
+    bool isFading_;             // True if currently fading
+    bool fadeDirection_;        // True = fading in (0 to 1), False = fading out (1 to 0)
+    sf::RectangleShape fadeOverlay_;  // Fade overlay rectangle
+
+    // Fade constants
+    static constexpr float FADE_SPEED = 2.0f;  // Alpha units per second
+    static constexpr float FADE_DURATION = 0.3f;  // Seconds for full fade
 
     /**
      * @brief Handles window events.
@@ -128,6 +152,18 @@ private:
      * @param deltaTime Time elapsed since last frame (in seconds)
      */
     void update(float deltaTime);
+
+    /**
+     * @brief Updates fade transition.
+     * @param deltaTime Time elapsed since last frame (in seconds)
+     */
+    void updateFade(float deltaTime);
+
+    /**
+     * @brief Starts a fade transition.
+     * @param fadeIn True to fade in (black to transparent), false to fade out (transparent to black)
+     */
+    void startFade(bool fadeIn);
 
     /**
      * @brief Renders the current state.

@@ -27,6 +27,9 @@ set(SOURCES
     src/core/GameState.cpp
     src/core/Game.cpp
     src/core/FontManager.cpp
+    src/ui/Button.cpp
+    src/ui/Starfield.cpp
+    src/ui/AnimatedText.cpp
     src/core/states/MenuState.cpp
     src/core/states/PlayingState.cpp
     src/core/states/PausedState.cpp

@@ -5,9 +5,11 @@
 #include <iostream>
 #include <memory>
 
-SettingsState::SettingsState(Game* game, GameState* previousState)
+// Note: SettingsState no longer stores previousState_ since we use changeState()
+// which clears the stack. The back button creates a new MenuState.
+
+SettingsState::SettingsState(Game* game)
     : game_(game)
-    , previousState_(previousState)
     , font_(FontManager::getDefaultFont())
     , titleText_(font_, "SETTINGS", 64)
     , placeholderText_(font_, "Settings menu\n\n(Volume, Controls, etc.)\n\nWill be implemented later", 24)
@@ -142,6 +144,6 @@ void SettingsState::handleBackButton()
 {
     std::cout << "Back button clicked" << std::endl;
     // Return to menu (Settings uses changeState, so we need to create a new MenuState)
-    game_->changeState(std::make_unique<MenuState>(game_));
+    game_->queueStateChange(std::make_unique<MenuState>(game_));
 }
 

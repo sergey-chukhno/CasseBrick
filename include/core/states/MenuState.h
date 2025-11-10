@@ -5,9 +5,13 @@
 #include <SFML/Graphics.hpp>
 #include <string>
 #include <vector>
+#include <memory>
 
-// Forward declaration
+// Forward declarations
 class Game;
+class Button;
+class Starfield;
+class AnimatedText;
 
 /**
  * @brief Menu state with Start, Settings, and Quit buttons.
@@ -16,6 +20,11 @@ class Game;
  * - Start the game (transitions to PlayingState)
  * - Open settings (transitions to SettingsState)
  * - Quit the game (exits application)
+ * 
+ * Enhanced with cyberpunk aesthetics:
+ * - Animated starfield background
+ * - Glowing buttons with hover effects
+ * - Pulsing title text
  */
 class MenuState : public GameState
 {
@@ -29,7 +38,7 @@ public:
     /**
      * @brief Destructor.
      */
-    ~MenuState() override = default;
+    ~MenuState() override;
 
     void update(float deltaTime) override;
     void render(sf::RenderWindow& window) override;
@@ -40,48 +49,27 @@ public:
 private:
     Game* game_;
 
-    // UI elements
-    const sf::Font& font_;  // Reference to font from FontManager
-    sf::Text titleText_;
-    std::vector<sf::RectangleShape> buttons_;
-    std::vector<sf::Text> buttonTexts_;
+    // UI components
+    std::unique_ptr<Starfield> starfield_;
+    std::unique_ptr<AnimatedText> titleText_;
+    std::vector<std::unique_ptr<Button>> buttons_;
     std::vector<std::string> buttonLabels_;
-
-    // Button colors
-    static constexpr sf::Color BUTTON_COLOR = sf::Color(0, 217, 255, 100);      // Cyan with transparency
-    static constexpr sf::Color BUTTON_HOVER_COLOR = sf::Color(0, 217, 255, 200); // Cyan brighter
-    static constexpr sf::Color TEXT_COLOR = sf::Color(255, 255, 255);            // White
-    static constexpr sf::Color TITLE_COLOR = sf::Color(255, 0, 110);             // Pink
 
     // Button dimensions
     static constexpr float BUTTON_WIDTH = 300.0f;
     static constexpr float BUTTON_HEIGHT = 60.0f;
     static constexpr float BUTTON_SPACING = 20.0f;
 
+    // Colors
+    static constexpr sf::Color TITLE_COLOR = sf::Color(255, 0, 110);  // Pink #ff006e
+    static constexpr sf::Color BUTTON_FILL_COLOR = sf::Color(0, 217, 255, 100);  // Cyan with transparency
+    static constexpr sf::Color BUTTON_OUTLINE_COLOR = sf::Color(0, 217, 255);  // Cyan
+    static constexpr sf::Color BUTTON_TEXT_COLOR = sf::Color(255, 255, 255);  // White
+
     /**
      * @brief Initializes the UI elements.
      */
     void initializeUI();
-
-    /**
-     * @brief Handles mouse click on buttons.
-     * @param mousePos Mouse position in window coordinates
-     */
-    void handleButtonClick(const sf::Vector2f& mousePos);
-
-    /**
-     * @brief Updates button hover states.
-     * @param mousePos Mouse position in window coordinates
-     */
-    void updateButtonHover(const sf::Vector2f& mousePos);
-
-    /**
-     * @brief Gets the index of the button at the given position.
-     * @param mousePos Mouse position in window coordinates
-     * @return Button index, or -1 if no button at position
-     */
-    int getButtonAt(const sf::Vector2f& mousePos) const;
 };
 
 #endif // MENUSTATE_H
-
