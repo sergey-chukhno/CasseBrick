@@ -6,6 +6,9 @@
 docs/
 .cursorrules
 
+# But keep ROADMAP.md in root directory (it's tracked)
+!ROADMAP.md
+
 # ============================================
 # Build Directories
 # ============================================
