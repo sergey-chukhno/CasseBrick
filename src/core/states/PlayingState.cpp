@@ -6,8 +6,11 @@
 #include "core/FontManager.h"
 #include "entities/Cannon.h"
 #include "entities/Projectile.h"
+#include "entities/Block.h"
 #include <iostream>
 #include <memory>
+#include <cstdlib>
+#include <ctime>
 
 PlayingState::PlayingState(Game* game)
     : game_(game)
@@ -36,11 +39,25 @@ void PlayingState::update(float deltaTime)
         sf::FloatRect cannonBounds = cannon_->getBounds();
         projectilePool_.updateAll(deltaTime, windowSize, cannonBounds);
     }
+    
+    // Update test blocks (for Step 3.1, temporary)
+    for (auto& block : testBlocks_) {
+        if (block && !block->isDestroyed()) {
+            block->update(deltaTime);
+        }
+    }
 }
 
 void PlayingState::render(sf::RenderWindow& window)
 {
-    // Render projectiles first (behind cannon)
+    // Render test blocks (behind projectiles and cannon)
+    for (const auto& block : testBlocks_) {
+        if (block && !block->isDestroyed()) {
+            block->render(window);
+        }
+    }
+    
+    // Render projectiles (behind cannon)
     projectilePool_.renderAll(window);
     
     // Render cannon
@@ -140,6 +157,32 @@ void PlayingState::onEnter()
         );
         
         std::cout << "Cannon created successfully" << std::endl;
+        
+        // Create test blocks for Step 3.1 (temporary, will be replaced by BlockManager in Step 3.2)
+        // Initialize random seed for block generation
+        std::srand(static_cast<unsigned int>(std::time(nullptr)));
+        
+        int testLevel = 1;
+        float windowWidth = static_cast<float>(game_->getWindowWidth());
+        
+        // Create a few test blocks at different positions
+        for (int i = 0; i < 5; ++i) {
+            float x = windowWidth / 6.0f * (i + 1); // Spread across screen
+            float y = 150.0f + (i * 80.0f); // Staggered vertically
+            
+            BlockShape shape = Block::getRandomShape(testLevel);
+            sf::Color color = Block::getRandomColor();
+            
+            // New Block constructor: position, shapeType, baseColor, level
+            testBlocks_.push_back(std::make_unique<Block>(
+                sf::Vector2f(x, y),
+                shape,
+                color,
+                testLevel
+            ));
+        }
+        
+        std::cout << "Test blocks created: " << testBlocks_.size() << std::endl;
         
         // Center placeholder text now that we're safely in the state stack
         // SFML 3.0: Rect uses .size (Vector2f) instead of .width/.height

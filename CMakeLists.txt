@@ -37,6 +37,8 @@ set(SOURCES
     src/core/states/SettingsState.cpp
     src/entities/Cannon.cpp
     src/entities/Projectile.cpp
+    src/entities/Brick.cpp
+    src/entities/Block.cpp
 )
 
 # Create executable

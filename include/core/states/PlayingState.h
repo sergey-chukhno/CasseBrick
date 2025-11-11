@@ -4,8 +4,10 @@
 #include "core/GameState.h"
 #include "entities/Cannon.h"
 #include "entities/Projectile.h"
+#include "entities/Block.h"
 #include <SFML/Graphics.hpp>
 #include <memory>
+#include <vector>
 
 // Forward declaration
 class Game;
@@ -47,6 +49,9 @@ private:
     
     // Projectile pool
     ProjectilePool projectilePool_;
+    
+    // Test blocks for Step 3.1 (temporary, will be replaced by BlockManager in Step 3.2)
+    std::vector<std::unique_ptr<Block>> testBlocks_;
 };
 
 #endif // PLAYINGSTATE_H
