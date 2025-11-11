@@ -3,6 +3,7 @@
 
 #include "core/GameState.h"
 #include "entities/Cannon.h"
+#include "entities/Projectile.h"
 #include <SFML/Graphics.hpp>
 #include <memory>
 
@@ -43,6 +44,9 @@ private:
     
     // Cannon
     std::unique_ptr<Cannon> cannon_;
+    
+    // Projectile pool
+    ProjectilePool projectilePool_;
 };
 
 #endif // PLAYINGSTATE_H

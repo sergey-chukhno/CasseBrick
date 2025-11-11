@@ -5,6 +5,7 @@
 #include "core/states/MenuState.h"
 #include "core/FontManager.h"
 #include "entities/Cannon.h"
+#include "entities/Projectile.h"
 #include <iostream>
 #include <memory>
 
@@ -13,9 +14,10 @@ PlayingState::PlayingState(Game* game)
     , font_(FontManager::getDefaultFont())
     , placeholderText_(
         font_,
-        "PLAYING STATE\n\nPress P to Pause\nPress G for Game Over (testing)\nPress ESC to return to Menu",
+        "PLAYING STATE\n\nPress SPACE or CLICK to shoot\nPress P to Pause\nPress G for Game Over (testing)\nPress ESC to return to Menu",
         32
     )
+    , projectilePool_(100) // Pool size: 100 projectiles
 {
     // Basic text initialization - positioning will be done in onEnter()
     placeholderText_.setFillColor(sf::Color(0, 217, 255)); // Cyan
@@ -28,11 +30,19 @@ void PlayingState::update(float deltaTime)
     if (cannon_)
     {
         cannon_->update(deltaTime, game_->getWindow());
+        
+        // Update all projectiles
+        sf::Vector2u windowSize(game_->getWindowWidth(), game_->getWindowHeight());
+        sf::FloatRect cannonBounds = cannon_->getBounds();
+        projectilePool_.updateAll(deltaTime, windowSize, cannonBounds);
     }
 }
 
 void PlayingState::render(sf::RenderWindow& window)
 {
+    // Render projectiles first (behind cannon)
+    projectilePool_.renderAll(window);
+    
     // Render cannon
     if (cannon_)
     {
@@ -49,6 +59,44 @@ void PlayingState::handleEvent(const sf::Event& event)
     if (cannon_)
     {
         cannon_->handleInput(event, game_->getWindow());
+    }
+    
+    // Handle shooting (Space bar or mouse click)
+    if (cannon_ && cannon_->canShoot())
+    {
+        bool shootRequested = false;
+        
+        if (auto* keyPressed = event.getIf<sf::Event::KeyPressed>())
+        {
+            if (keyPressed->code == sf::Keyboard::Key::Space)
+            {
+                shootRequested = true;
+            }
+        }
+        
+        if (auto* mouseButton = event.getIf<sf::Event::MouseButtonPressed>())
+        {
+            if (mouseButton->button == sf::Mouse::Button::Left)
+            {
+                shootRequested = true;
+            }
+        }
+        
+        if (shootRequested)
+        {
+            // Shoot projectile from cannon
+            sf::Vector2f spawnPosition;
+            sf::Vector2f velocity;
+            if (cannon_->shoot(spawnPosition, velocity))
+            {
+                // Acquire projectile from pool
+                Projectile* projectile = projectilePool_.acquire(spawnPosition, velocity);
+                if (!projectile)
+                {
+                    std::cerr << "Warning: Projectile pool is full!" << std::endl;
+                }
+            }
+        }
     }
     
     // Handle game state transitions
