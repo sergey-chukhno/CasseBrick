@@ -3,8 +3,11 @@
 
 #include "core/GameState.h"
 #include "entities/Cannon.h"
+#include "entities/Projectile.h"
+#include "managers/BlockManager.h"
 #include <SFML/Graphics.hpp>
 #include <memory>
+#include <vector>
 
 // Forward declaration
 class Game;
@@ -43,6 +46,16 @@ private:
     
     // Cannon
     std::unique_ptr<Cannon> cannon_;
+    
+    // Projectile pool
+    ProjectilePool projectilePool_;
+    
+    // Block manager (wave-based spawning and descent)
+    std::unique_ptr<BlockManager> blockManager_;
+    
+    // Game state
+    int currentLevel_;
+    int score_;
 };
 
 #endif // PLAYINGSTATE_H

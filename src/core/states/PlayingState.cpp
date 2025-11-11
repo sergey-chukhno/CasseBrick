@@ -5,17 +5,24 @@
 #include "core/states/MenuState.h"
 #include "core/FontManager.h"
 #include "entities/Cannon.h"
+#include "entities/Projectile.h"
+#include "managers/BlockManager.h"
 #include <iostream>
 #include <memory>
+#include <cstdlib>
+#include <ctime>
 
 PlayingState::PlayingState(Game* game)
     : game_(game)
     , font_(FontManager::getDefaultFont())
     , placeholderText_(
         font_,
-        "PLAYING STATE\n\nPress P to Pause\nPress G for Game Over (testing)\nPress ESC to return to Menu",
+        "PLAYING STATE\n\nPress SPACE or CLICK to shoot\nPress P to Pause\nPress ESC to return to Menu",
         32
     )
+    , projectilePool_(100) // Pool size: 100 projectiles
+    , currentLevel_(1)
+    , score_(0)
 {
     // Basic text initialization - positioning will be done in onEnter()
     placeholderText_.setFillColor(sf::Color(0, 217, 255)); // Cyan
@@ -28,11 +35,49 @@ void PlayingState::update(float deltaTime)
     if (cannon_)
     {
         cannon_->update(deltaTime, game_->getWindow());
+        
+        // Update all projectiles
+        sf::Vector2u windowSize(game_->getWindowWidth(), game_->getWindowHeight());
+        sf::FloatRect cannonBounds = cannon_->getBounds();
+        projectilePool_.updateAll(deltaTime, windowSize, cannonBounds);
+        
+        // Update BlockManager
+        if (blockManager_)
+        {
+            blockManager_->update(deltaTime, cannonBounds);
+            
+            // Check game over conditions
+            if (blockManager_->hasBlocksReachedBottom() || 
+                blockManager_->hasBlocksTouchedCannon(cannonBounds))
+            {
+                // Trigger game over
+                game_->queueStateChange(std::make_unique<GameOverState>(game_, score_));
+                return;
+            }
+            
+            // Check level completion (immediate progression)
+            if (blockManager_->isLevelComplete())
+            {
+                // Advance to next level
+                currentLevel_++;
+                blockManager_->advanceLevel();
+                std::cout << "Level " << currentLevel_ << " started" << std::endl;
+            }
+        }
     }
 }
 
 void PlayingState::render(sf::RenderWindow& window)
 {
+    // Render blocks (through BlockManager, behind projectiles and cannon)
+    if (blockManager_)
+    {
+        blockManager_->render(window);
+    }
+    
+    // Render projectiles (behind cannon)
+    projectilePool_.renderAll(window);
+    
     // Render cannon
     if (cannon_)
     {
@@ -51,6 +96,44 @@ void PlayingState::handleEvent(const sf::Event& event)
         cannon_->handleInput(event, game_->getWindow());
     }
     
+    // Handle shooting (Space bar or mouse click)
+    if (cannon_ && cannon_->canShoot())
+    {
+        bool shootRequested = false;
+        
+        if (auto* keyPressed = event.getIf<sf::Event::KeyPressed>())
+        {
+            if (keyPressed->code == sf::Keyboard::Key::Space)
+            {
+                shootRequested = true;
+            }
+        }
+        
+        if (auto* mouseButton = event.getIf<sf::Event::MouseButtonPressed>())
+        {
+            if (mouseButton->button == sf::Mouse::Button::Left)
+            {
+                shootRequested = true;
+            }
+        }
+        
+        if (shootRequested)
+        {
+            // Shoot projectile from cannon
+            sf::Vector2f spawnPosition;
+            sf::Vector2f velocity;
+            if (cannon_->shoot(spawnPosition, velocity))
+            {
+                // Acquire projectile from pool
+                Projectile* projectile = projectilePool_.acquire(spawnPosition, velocity);
+                if (!projectile)
+                {
+                    std::cerr << "Warning: Projectile pool is full!" << std::endl;
+                }
+            }
+        }
+    }
+    
     // Handle game state transitions
     if (auto* keyPressed = event.getIf<sf::Event::KeyPressed>())
     {
@@ -59,12 +142,6 @@ void PlayingState::handleEvent(const sf::Event& event)
         {
             std::cout << "Pause key pressed" << std::endl;
             game_->pushState(std::make_unique<PausedState>(game_));
-        }
-        // G key: Game Over (for testing)
-        else if (keyPressed->code == sf::Keyboard::Key::G)
-        {
-            std::cout << "Game Over triggered (testing)" << std::endl;
-            game_->queueStateChange(std::make_unique<GameOverState>(game_, 1234)); // Test score
         }
         // ESC key: Return to menu
         else if (keyPressed->code == sf::Keyboard::Key::Escape)
@@ -92,6 +169,20 @@ void PlayingState::onEnter()
         );
         
         std::cout << "Cannon created successfully" << std::endl;
+        
+        // Initialize BlockManager
+        blockManager_ = std::make_unique<BlockManager>(
+            game_->getWindowWidth(),
+            game_->getWindowHeight()
+        );
+        
+        // Initialize game state
+        currentLevel_ = 1;
+        score_ = 0;
+        
+        // Start level 1
+        blockManager_->startLevel(currentLevel_);
+        std::cout << "Level " << currentLevel_ << " started" << std::endl;
         
         // Center placeholder text now that we're safely in the state stack
         // SFML 3.0: Rect uses .size (Vector2f) instead of .width/.height
