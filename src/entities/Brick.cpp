@@ -149,6 +149,11 @@ void Brick::setPosition(const sf::Vector2f& position)
     healthText_.setPosition(position_);
 }
 
+sf::Color Brick::getBaseColor() const
+{
+    return baseColor_;
+}
+
 void Brick::updateColor()
 {
     // Use distance factor for gradient (based on position from block center)

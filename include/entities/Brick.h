@@ -81,6 +81,12 @@ public:
      */
     void setPosition(const sf::Vector2f& position);
 
+    /**
+     * @brief Gets the base color of the brick (for explosion effects).
+     * @return Base color
+     */
+    sf::Color getBaseColor() const;
+
 private:
     // Position and size
     sf::Vector2f position_;

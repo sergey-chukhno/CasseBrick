@@ -6,11 +6,18 @@
 #include "core/FontManager.h"
 #include "entities/Cannon.h"
 #include "entities/Projectile.h"
+#include "entities/Brick.h"
 #include "managers/BlockManager.h"
 #include <iostream>
 #include <memory>
 #include <cstdlib>
 #include <ctime>
+#include <cmath>
+#include <algorithm>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 PlayingState::PlayingState(Game* game)
     : game_(game)
@@ -46,6 +53,9 @@ void PlayingState::update(float deltaTime)
         {
             blockManager_->update(deltaTime, cannonBounds);
             
+            // Check collisions between projectiles and bricks
+            checkProjectileBrickCollisions();
+            
             // Check game over conditions
             if (blockManager_->hasBlocksReachedBottom() || 
                 blockManager_->hasBlocksTouchedCannon(cannonBounds))
@@ -64,6 +74,9 @@ void PlayingState::update(float deltaTime)
                 std::cout << "Level " << currentLevel_ << " started" << std::endl;
             }
         }
+        
+        // Update explosion particles
+        updateExplosionParticles(deltaTime);
     }
 }
 
@@ -77,6 +90,9 @@ void PlayingState::render(sf::RenderWindow& window)
     
     // Render projectiles (behind cannon)
     projectilePool_.renderAll(window);
+    
+    // Render explosion particles (behind cannon, on top of projectiles)
+    renderExplosionParticles(window);
     
     // Render cannon
     if (cannon_)
@@ -210,5 +226,241 @@ void PlayingState::onEnter()
 void PlayingState::onExit()
 {
     std::cout << "Exited PlayingState" << std::endl;
+}
+
+void PlayingState::checkProjectileBrickCollisions()
+{
+    if (!blockManager_) {
+        return;
+    }
+    
+    // Get all active projectiles and blocks
+    std::vector<Projectile*> activeProjectiles = projectilePool_.getActiveProjectiles();
+    std::vector<Block*> activeBlocks = blockManager_->getActiveBlocks();
+    
+    // Iterate through all active projectiles
+    for (Projectile* projectile : activeProjectiles) {
+        if (!projectile || !projectile->isActive()) {
+            continue;
+        }
+        
+        sf::FloatRect projectileBounds = projectile->getBounds();
+        bool hasCollided = false;  // Track if projectile has collided (for bounce direction)
+        sf::FloatRect firstCollisionBounds;  // Store first collision for bounce
+        
+        // For each block
+        for (Block* block : activeBlocks) {
+            if (!block || block->isDestroyed()) {
+                continue;
+            }
+            
+            // Get all bricks in the block
+            std::vector<Brick*> bricks = block->getBricks();
+            
+            // For each brick (allow multiple hits)
+            for (Brick* brick : bricks) {
+                if (!brick || brick->isDestroyed()) {
+                    continue;
+                }
+                
+                // Get brick bounds
+                sf::FloatRect brickBounds = brick->getBounds();
+                
+                // Check collision (AABB)
+                if (checkAABBCollision(projectileBounds, brickBounds)) {
+                    // Get brick color and position before damage (for explosion effect)
+                    sf::Vector2f brickPos = brick->getPosition();
+                    sf::Color brickColor = brick->getBaseColor();
+                    
+                    // Apply damage to brick (1 damage per hit)
+                    bool wasDestroyed = brick->takeDamage(1);
+                    
+                    // Store first collision for bounce (only bounce once per frame)
+                    if (!hasCollided) {
+                        hasCollided = true;
+                        firstCollisionBounds = brickBounds;
+                    }
+                    
+                    // Create explosion effect if brick is destroyed
+                    if (wasDestroyed) {
+                        createExplosion(brickPos, brickColor);
+                        
+                        // Update score (will be implemented in Step 4.1)
+                        // score_ += 10;  // Placeholder
+                    }
+                    
+                    // Continue checking other bricks (allow multiple hits)
+                    // Don't break here - allow projectile to hit multiple bricks
+                }
+            }
+        }
+        
+        // Bounce projectile based on first collision (only bounce once per frame)
+        if (hasCollided) {
+            bounceProjectileOffBrick(projectile, firstCollisionBounds);
+        }
+    }
+}
+
+bool PlayingState::checkAABBCollision(const sf::FloatRect& rect1, const sf::FloatRect& rect2) const
+{
+    // AABB collision detection (SFML 3.0: Rect uses position and size)
+    return (rect1.position.x < rect2.position.x + rect2.size.x &&
+            rect1.position.x + rect1.size.x > rect2.position.x &&
+            rect1.position.y < rect2.position.y + rect2.size.y &&
+            rect1.position.y + rect1.size.y > rect2.position.y);
+}
+
+void PlayingState::bounceProjectileOffBrick(Projectile* projectile, const sf::FloatRect& brickBounds)
+{
+    if (!projectile) {
+        return;
+    }
+    
+    sf::Vector2f projectilePos = projectile->getPosition();
+    sf::Vector2f projectileVel = projectile->getVelocity();
+    
+    // Calculate brick center and edges
+    float brickLeft = brickBounds.position.x;
+    float brickRight = brickBounds.position.x + brickBounds.size.x;
+    float brickTop = brickBounds.position.y;
+    float brickBottom = brickBounds.position.y + brickBounds.size.y;
+    float brickCenterX = brickLeft + brickBounds.size.x / 2.0f;
+    float brickCenterY = brickTop + brickBounds.size.y / 2.0f;
+    
+    // Determine which side of the brick was hit based on projectile position and velocity
+    // Calculate distances to each edge
+    float distToLeft = std::abs(projectilePos.x - brickLeft);
+    float distToRight = std::abs(projectilePos.x - brickRight);
+    float distToTop = std::abs(projectilePos.y - brickTop);
+    float distToBottom = std::abs(projectilePos.y - brickBottom);
+    
+    // Find the closest edge
+    float minDist = std::min({distToLeft, distToRight, distToTop, distToBottom});
+    
+    // Also consider velocity direction for more accurate bounce
+    bool movingRight = projectileVel.x > 0;
+    bool movingLeft = projectileVel.x < 0;
+    bool movingDown = projectileVel.y > 0;
+    bool movingUp = projectileVel.y < 0;
+    
+    // Determine bounce based on closest edge and velocity direction
+    // Use velocity direction as primary indicator, distance as secondary
+    if (minDist == distToTop && (movingUp || projectilePos.y < brickCenterY)) {
+        // Hit top edge, bounce down (reflect Y velocity downward)
+        projectile->setVelocity(sf::Vector2f(projectileVel.x, std::abs(projectileVel.y)));
+        projectile->setPosition(sf::Vector2f(projectilePos.x, brickTop - COLLISION_OFFSET));
+    } else if (minDist == distToBottom && (movingDown || projectilePos.y > brickCenterY)) {
+        // Hit bottom edge, bounce up (reflect Y velocity upward)
+        projectile->setVelocity(sf::Vector2f(projectileVel.x, -std::abs(projectileVel.y)));
+        projectile->setPosition(sf::Vector2f(projectilePos.x, brickBottom + COLLISION_OFFSET));
+    } else if (minDist == distToLeft && (movingLeft || projectilePos.x < brickCenterX)) {
+        // Hit left edge, bounce right (reflect X velocity rightward)
+        projectile->setVelocity(sf::Vector2f(std::abs(projectileVel.x), projectileVel.y));
+        projectile->setPosition(sf::Vector2f(brickLeft - COLLISION_OFFSET, projectilePos.y));
+    } else if (minDist == distToRight && (movingRight || projectilePos.x > brickCenterX)) {
+        // Hit right edge, bounce left (reflect X velocity leftward)
+        projectile->setVelocity(sf::Vector2f(-std::abs(projectileVel.x), projectileVel.y));
+        projectile->setPosition(sf::Vector2f(brickRight + COLLISION_OFFSET, projectilePos.y));
+    } else {
+        // Fallback: determine based on velocity direction only
+        if (std::abs(projectileVel.x) > std::abs(projectileVel.y)) {
+            // Horizontal collision (reflect X)
+            if (movingRight) {
+                projectile->setVelocity(sf::Vector2f(-std::abs(projectileVel.x), projectileVel.y));
+                projectile->setPosition(sf::Vector2f(brickLeft - COLLISION_OFFSET, projectilePos.y));
+            } else if (movingLeft) {
+                projectile->setVelocity(sf::Vector2f(std::abs(projectileVel.x), projectileVel.y));
+                projectile->setPosition(sf::Vector2f(brickRight + COLLISION_OFFSET, projectilePos.y));
+            }
+        } else {
+            // Vertical collision (reflect Y)
+            if (movingDown) {
+                projectile->setVelocity(sf::Vector2f(projectileVel.x, -std::abs(projectileVel.y)));
+                projectile->setPosition(sf::Vector2f(projectilePos.x, brickTop - COLLISION_OFFSET));
+            } else if (movingUp) {
+                projectile->setVelocity(sf::Vector2f(projectileVel.x, std::abs(projectileVel.y)));
+                projectile->setPosition(sf::Vector2f(projectilePos.x, brickBottom + COLLISION_OFFSET));
+            }
+        }
+    }
+}
+
+void PlayingState::createExplosion(const sf::Vector2f& position, const sf::Color& color)
+{
+    // Create 10-16 particles with color variation (medium complexity)
+    int particleCount = 10 + (std::rand() % 7);  // 10-16 particles
+    
+    for (int i = 0; i < particleCount; ++i) {
+        ExplosionParticle particle;
+        
+        // Random direction and speed
+        float angle = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX) * 2.0f * static_cast<float>(M_PI);
+        float speed = 100.0f + static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX) * 100.0f;  // 100-200 px/s
+        
+        particle.position = position;
+        particle.velocity = sf::Vector2f(
+            std::cos(angle) * speed,
+            std::sin(angle) * speed
+        );
+        
+        // Color variation: slight randomization of RGB values
+        int colorVariation = 30;  // +/- 30 RGB units
+        int r = std::max(0, std::min(255, static_cast<int>(color.r) + (std::rand() % (colorVariation * 2)) - colorVariation));
+        int g = std::max(0, std::min(255, static_cast<int>(color.g) + (std::rand() % (colorVariation * 2)) - colorVariation));
+        int b = std::max(0, std::min(255, static_cast<int>(color.b) + (std::rand() % (colorVariation * 2)) - colorVariation));
+        particle.color = sf::Color(r, g, b);
+        
+        // Lifetime: 0.2-0.4 seconds
+        particle.maxLifetime = 0.2f + static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX) * 0.2f;
+        particle.lifetime = particle.maxLifetime;
+        
+        // Size: 2-4px radius
+        particle.size = 2.0f + static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX) * 2.0f;
+        
+        explosionParticles_.push_back(particle);
+    }
+}
+
+void PlayingState::updateExplosionParticles(float deltaTime)
+{
+    // Update all particles
+    for (auto& particle : explosionParticles_) {
+        // Update position
+        particle.position += particle.velocity * deltaTime;
+        
+        // Update lifetime
+        particle.lifetime -= deltaTime;
+    }
+    
+    // Remove expired particles
+    explosionParticles_.erase(
+        std::remove_if(
+            explosionParticles_.begin(),
+            explosionParticles_.end(),
+            [](const ExplosionParticle& particle) {
+                return particle.lifetime <= 0.0f;
+            }
+        ),
+        explosionParticles_.end()
+    );
+}
+
+void PlayingState::renderExplosionParticles(sf::RenderWindow& window) const
+{
+    for (const auto& particle : explosionParticles_) {
+        // Calculate alpha based on lifetime
+        float alphaFactor = particle.lifetime / particle.maxLifetime;
+        unsigned char alpha = static_cast<unsigned char>(255 * alphaFactor);
+        
+        // Create particle shape
+        sf::CircleShape particleShape(particle.size);
+        particleShape.setOrigin(sf::Vector2f(particle.size, particle.size));
+        particleShape.setPosition(particle.position);
+        particleShape.setFillColor(sf::Color(particle.color.r, particle.color.g, particle.color.b, alpha));
+        particleShape.setOutlineThickness(0.0f);
+        
+        window.draw(particleShape);
+    }
 }
 

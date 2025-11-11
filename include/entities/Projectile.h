@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <deque>
+#include <algorithm>
 
 /**
  * @brief Represents an energy projectile shot from the cannon.
@@ -66,6 +67,18 @@ public:
      * @return True if active, false otherwise
      */
     bool isActive() const;
+
+    /**
+     * @brief Sets the projectile's velocity (for bouncing).
+     * @param velocity New velocity vector
+     */
+    void setVelocity(const sf::Vector2f& velocity);
+
+    /**
+     * @brief Sets the projectile's position (for collision response).
+     * @param position New position vector
+     */
+    void setPosition(const sf::Vector2f& position);
 
 private:
     // Position and movement
@@ -146,6 +159,18 @@ public:
      * @return Number of active projectiles
      */
     size_t getActiveCount() const;
+
+    /**
+     * @brief Gets all active projectiles (for collision detection).
+     * @return Vector of active projectile pointers
+     */
+    std::vector<Projectile*> getActiveProjectiles();
+
+    /**
+     * @brief Gets all active projectiles (const version).
+     * @return Vector of const active projectile pointers
+     */
+    std::vector<const Projectile*> getActiveProjectiles() const;
 
     /**
      * @brief Clears all projectiles (deactivates all).
