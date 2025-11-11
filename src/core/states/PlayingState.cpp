@@ -14,6 +14,8 @@
 #include <ctime>
 #include <cmath>
 #include <algorithm>
+#include <sstream>
+#include <fstream>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -28,12 +30,23 @@ PlayingState::PlayingState(Game* game)
         32
     )
     , projectilePool_(100) // Pool size: 100 projectiles
-    , currentLevel_(1)
+    , currentLevel_(1)  // Will be synced with BlockManager in onEnter()
     , score_(0)
+    , displayedScore_(0)
+    , bricksDestroyed_(0)
+    , highScore_(0)
+    , scoreText_(font_, "Score: 0", 24)
 {
     // Basic text initialization - positioning will be done in onEnter()
     placeholderText_.setFillColor(sf::Color(0, 217, 255)); // Cyan
     placeholderText_.setStyle(sf::Text::Bold);
+    
+    // Initialize score text
+    scoreText_.setFillColor(sf::Color(0, 217, 255)); // Cyan
+    scoreText_.setStyle(sf::Text::Bold);
+    
+    // Load high score
+    loadHighScore();
 }
 
 void PlayingState::update(float deltaTime)
@@ -53,30 +66,48 @@ void PlayingState::update(float deltaTime)
         {
             blockManager_->update(deltaTime, cannonBounds);
             
-            // Check collisions between projectiles and bricks
+            // Check collisions between projectiles and bricks (this may destroy bricks)
             checkProjectileBrickCollisions();
             
-            // Check game over conditions
-            if (blockManager_->hasBlocksReachedBottom() || 
-                blockManager_->hasBlocksTouchedCannon(cannonBounds))
-            {
-                // Trigger game over
-                game_->queueStateChange(std::make_unique<GameOverState>(game_, score_));
-                return;
-            }
+            // Update block destroyed states AFTER collision detection
+            // This ensures blocks are marked as destroyed when all their bricks are destroyed
+            blockManager_->updateBlockDestroyedStates(deltaTime);
             
-            // Check level completion (immediate progression)
+            // Check level completion FIRST (before game over)
+            // This ensures we can advance to next level even if blocks are near the bottom
             if (blockManager_->isLevelComplete())
             {
                 // Advance to next level
-                currentLevel_++;
+                // advanceLevel() will increment the level internally
                 blockManager_->advanceLevel();
+                // Update currentLevel_ to match BlockManager's level
+                currentLevel_ = blockManager_->getCurrentLevel();
                 std::cout << "Level " << currentLevel_ << " started" << std::endl;
+                // Continue to next frame - don't check game over if level is complete
+                return;
+            }
+            
+            // Check game over conditions (only if level is not complete)
+            if (blockManager_->hasBlocksReachedBottom() || 
+                blockManager_->hasBlocksTouchedCannon(cannonBounds))
+            {
+                // Update high score if needed
+                if (score_ > highScore_) {
+                    highScore_ = score_;
+                    saveHighScore();
+                }
+                
+                // Trigger game over with statistics
+                game_->queueStateChange(std::make_unique<GameOverState>(game_, score_, currentLevel_, bricksDestroyed_));
+                return;
             }
         }
         
         // Update explosion particles
         updateExplosionParticles(deltaTime);
+        
+        // Update animated score display
+        updateScoreDisplay(deltaTime);
     }
 }
 
@@ -99,6 +130,9 @@ void PlayingState::render(sf::RenderWindow& window)
     {
         cannon_->render(window);
     }
+    
+    // Render score display (top-left corner)
+    window.draw(scoreText_);
     
     // Draw placeholder text (temporary, will be removed later)
     window.draw(placeholderText_);
@@ -193,11 +227,17 @@ void PlayingState::onEnter()
         );
         
         // Initialize game state
-        currentLevel_ = 1;
         score_ = 0;
+        displayedScore_ = 0;
+        bricksDestroyed_ = 0;
+        
+        // Initialize score display
+        initializeScoreDisplay();
         
         // Start level 1
-        blockManager_->startLevel(currentLevel_);
+        blockManager_->startLevel(1);
+        // Sync currentLevel_ with BlockManager's level
+        currentLevel_ = blockManager_->getCurrentLevel();
         std::cout << "Level " << currentLevel_ << " started" << std::endl;
         
         // Center placeholder text now that we're safely in the state stack
@@ -285,8 +325,13 @@ void PlayingState::checkProjectileBrickCollisions()
                     if (wasDestroyed) {
                         createExplosion(brickPos, brickColor);
                         
-                        // Update score (will be implemented in Step 4.1)
-                        // score_ += 10;  // Placeholder
+                        // Calculate and add score
+                        int brickMaxHealth = brick->getMaxHealth();
+                        int points = calculateScore(currentLevel_, brickMaxHealth);
+                        addScore(points);
+                        
+                        // Increment bricks destroyed counter
+                        bricksDestroyed_++;
                     }
                     
                     // Continue checking other bricks (allow multiple hits)
@@ -461,6 +506,86 @@ void PlayingState::renderExplosionParticles(sf::RenderWindow& window) const
         particleShape.setOutlineThickness(0.0f);
         
         window.draw(particleShape);
+    }
+}
+
+int PlayingState::calculateScore(int level, int brickMaxHealth) const
+{
+    // Calculate level multiplier (linear scaling)
+    float levelMultiplier = LEVEL_MULTIPLIER_BASE + (level - 1) * LEVEL_MULTIPLIER_STEP;
+    
+    // Calculate health multiplier (linear scaling)
+    float healthMultiplier = HEALTH_MULTIPLIER_BASE + (brickMaxHealth - 1) * HEALTH_MULTIPLIER_STEP;
+    
+    // Calculate final score
+    float finalScore = static_cast<float>(BASE_SCORE_PER_BRICK) * levelMultiplier * healthMultiplier;
+    
+    return static_cast<int>(finalScore);
+}
+
+void PlayingState::addScore(int points)
+{
+    score_ += points;
+}
+
+void PlayingState::updateScoreDisplay(float deltaTime)
+{
+    // Animate score counting up
+    if (displayedScore_ < score_) {
+        int scoreDifference = score_ - displayedScore_;
+        int increment = static_cast<int>(SCORE_ANIMATION_SPEED * deltaTime);
+        
+        if (increment >= scoreDifference) {
+            displayedScore_ = score_;
+        } else {
+            displayedScore_ += increment;
+        }
+        
+        // Update score text
+        std::stringstream ss;
+        ss << "Score: " << displayedScore_;
+        scoreText_.setString(ss.str());
+    } else if (displayedScore_ > score_) {
+        // Safety check: if displayed score is somehow higher than actual score, sync it
+        displayedScore_ = score_;
+        std::stringstream ss;
+        ss << "Score: " << displayedScore_;
+        scoreText_.setString(ss.str());
+    }
+}
+
+void PlayingState::initializeScoreDisplay()
+{
+    // Set score text position (top-left corner)
+    scoreText_.setPosition(sf::Vector2f(20.0f, 20.0f));
+    
+    // Initialize displayed score
+    displayedScore_ = score_;
+    
+    // Set initial score text
+    std::stringstream ss;
+    ss << "Score: " << displayedScore_;
+    scoreText_.setString(ss.str());
+}
+
+void PlayingState::loadHighScore()
+{
+    std::ifstream file(HIGH_SCORE_FILE);
+    if (file.is_open()) {
+        file >> highScore_;
+        file.close();
+    } else {
+        // File doesn't exist, set high score to 0
+        highScore_ = 0;
+    }
+}
+
+void PlayingState::saveHighScore()
+{
+    std::ofstream file(HIGH_SCORE_FILE);
+    if (file.is_open()) {
+        file << highScore_;
+        file.close();
     }
 }
 

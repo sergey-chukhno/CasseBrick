@@ -22,8 +22,10 @@ public:
      * @brief Constructs a GameOverState.
      * @param game Pointer to the Game instance for state transitions
      * @param score Final score to display
+     * @param level Level reached
+     * @param bricksDestroyed Number of bricks destroyed
      */
-    explicit GameOverState(Game* game, int score = 0);
+    explicit GameOverState(Game* game, int score = 0, int level = 1, int bricksDestroyed = 0);
 
     /**
      * @brief Destructor.
@@ -39,11 +41,15 @@ public:
 private:
     Game* game_;
     int score_;
+    int level_;
+    int bricksDestroyed_;
 
     // UI elements
     const sf::Font& font_;  // Reference to font from FontManager
     sf::Text titleText_;
     sf::Text scoreText_;
+    sf::Text levelText_;
+    sf::Text bricksDestroyedText_;
     std::vector<sf::RectangleShape> buttons_;
     std::vector<sf::Text> buttonTexts_;
     std::vector<std::string> buttonLabels_;

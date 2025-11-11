@@ -58,6 +58,25 @@ private:
     // Game state
     int currentLevel_;
     int score_;
+    int displayedScore_;  // Displayed score (for animated count-up effect)
+    int bricksDestroyed_;  // Number of bricks destroyed
+    
+    // High score system
+    int highScore_;
+    static constexpr const char* HIGH_SCORE_FILE = "highscore.txt";
+    
+    // Score display
+    sf::Text scoreText_;
+    
+    // Score calculation constants
+    static constexpr int BASE_SCORE_PER_BRICK = 10;
+    static constexpr float LEVEL_MULTIPLIER_BASE = 1.0f;
+    static constexpr float LEVEL_MULTIPLIER_STEP = 0.2f;
+    static constexpr float HEALTH_MULTIPLIER_BASE = 1.0f;
+    static constexpr float HEALTH_MULTIPLIER_STEP = 0.5f;
+    
+    // Animated score constants
+    static constexpr float SCORE_ANIMATION_SPEED = 500.0f;  // Points per second for count-up
     
     // Explosion particle system
     struct ExplosionParticle {
@@ -111,6 +130,59 @@ private:
      * @param window Render window
      */
     void renderExplosionParticles(sf::RenderWindow& window) const;
+    
+    /**
+     * @brief Calculates score for destroying a brick.
+     * @param level Current level
+     * @param brickMaxHealth Maximum health of the brick
+     * @return Score points awarded
+     */
+    int calculateScore(int level, int brickMaxHealth) const;
+    
+    /**
+     * @brief Adds score to total score.
+     * @param points Points to add
+     */
+    void addScore(int points);
+    
+    /**
+     * @brief Updates animated score display.
+     * @param deltaTime Time elapsed since last frame
+     */
+    void updateScoreDisplay(float deltaTime);
+    
+    /**
+     * @brief Initializes score display text.
+     */
+    void initializeScoreDisplay();
+    
+    /**
+     * @brief Loads high score from file.
+     */
+    void loadHighScore();
+    
+    /**
+     * @brief Saves high score to file.
+     */
+    void saveHighScore();
+    
+    /**
+     * @brief Gets the current score.
+     * @return Current score
+     */
+    int getScore() const { return score_; }
+    
+    /**
+     * @brief Gets the current level.
+     * @return Current level
+     */
+    int getCurrentLevel() const { return currentLevel_; }
+    
+    /**
+     * @brief Gets the number of bricks destroyed.
+     * @return Number of bricks destroyed
+     */
+    int getBricksDestroyed() const { return bricksDestroyed_; }
 };
 
 #endif // PLAYINGSTATE_H

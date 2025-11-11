@@ -37,6 +37,14 @@ public:
      * @param cannonBounds Cannon bounding rectangle (for collision detection)
      */
     void update(float deltaTime, const sf::FloatRect& cannonBounds);
+    
+    /**
+     * @brief Updates block destroyed states (checks if blocks should be marked as destroyed).
+     * This should be called after collision detection to ensure blocks are marked as destroyed
+     * when all their bricks are destroyed.
+     * @param deltaTime Time elapsed since last frame (in seconds)
+     */
+    void updateBlockDestroyedStates(float deltaTime);
 
     /**
      * @brief Renders all active blocks.

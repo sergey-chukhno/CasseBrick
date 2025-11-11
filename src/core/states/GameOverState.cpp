@@ -8,12 +8,16 @@
 #include <memory>
 #include <string>
 
-GameOverState::GameOverState(Game* game, int score)
+GameOverState::GameOverState(Game* game, int score, int level, int bricksDestroyed)
     : game_(game)
     , score_(score)
+    , level_(level)
+    , bricksDestroyed_(bricksDestroyed)
     , font_(FontManager::getDefaultFont())
     , titleText_(font_, "GAME OVER", 64)
     , scoreText_(font_, "", 36)  // Initialize with empty string, will set in initializeUI
+    , levelText_(font_, "", 28)  // Initialize with empty string, will set in initializeUI
+    , bricksDestroyedText_(font_, "", 28)  // Initialize with empty string, will set in initializeUI
     , buttonLabels_{"RESTART", "MENU"}
 {
     initializeUI();
@@ -47,11 +51,41 @@ void GameOverState::initializeUI()
     scoreText_.setOrigin(sf::Vector2f(scoreBounds.size.x / 2.0f, scoreBounds.size.y / 2.0f));
     scoreText_.setPosition(sf::Vector2f(
         static_cast<float>(game_->getWindowWidth()) / 2.0f,
-        300.0f
+        280.0f
+    ));
+    
+    // Level text
+    std::stringstream levelSs;
+    levelSs << "LEVEL REACHED: " << level_;
+    levelText_.setString(levelSs.str());
+    levelText_.setFillColor(sf::Color(0, 217, 255)); // Cyan
+    levelText_.setStyle(sf::Text::Bold);
+    
+    // Center level text
+    sf::FloatRect levelBounds = levelText_.getLocalBounds();
+    levelText_.setOrigin(sf::Vector2f(levelBounds.size.x / 2.0f, levelBounds.size.y / 2.0f));
+    levelText_.setPosition(sf::Vector2f(
+        static_cast<float>(game_->getWindowWidth()) / 2.0f,
+        330.0f
+    ));
+    
+    // Bricks destroyed text
+    std::stringstream bricksSs;
+    bricksSs << "BRICKS DESTROYED: " << bricksDestroyed_;
+    bricksDestroyedText_.setString(bricksSs.str());
+    bricksDestroyedText_.setFillColor(sf::Color(0, 217, 255)); // Cyan
+    bricksDestroyedText_.setStyle(sf::Text::Bold);
+    
+    // Center bricks destroyed text
+    sf::FloatRect bricksBounds = bricksDestroyedText_.getLocalBounds();
+    bricksDestroyedText_.setOrigin(sf::Vector2f(bricksBounds.size.x / 2.0f, bricksBounds.size.y / 2.0f));
+    bricksDestroyedText_.setPosition(sf::Vector2f(
+        static_cast<float>(game_->getWindowWidth()) / 2.0f,
+        370.0f
     ));
 
     // Create buttons
-    float startY = 450.0f;
+    float startY = 480.0f;  // Moved down to accommodate statistics
     float centerX = static_cast<float>(game_->getWindowWidth()) / 2.0f;
 
     for (size_t i = 0; i < buttonLabels_.size(); ++i)
@@ -99,6 +133,12 @@ void GameOverState::render(sf::RenderWindow& window)
 
     // Draw score
     window.draw(scoreText_);
+    
+    // Draw level reached
+    window.draw(levelText_);
+    
+    // Draw bricks destroyed
+    window.draw(bricksDestroyedText_);
 
     // Draw buttons
     for (size_t i = 0; i < buttons_.size(); ++i)
@@ -128,7 +168,7 @@ void GameOverState::handleEvent(const sf::Event& event)
             // Activate first button (RESTART)
             handleButtonClick(sf::Vector2f(
                 static_cast<float>(game_->getWindowWidth()) / 2.0f,
-                450.0f
+                480.0f  // Updated to match new button position
             ));
         }
     }
