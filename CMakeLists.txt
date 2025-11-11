@@ -39,6 +39,7 @@ set(SOURCES
     src/entities/Projectile.cpp
     src/entities/Brick.cpp
     src/entities/Block.cpp
+    src/managers/BlockManager.cpp
 )
 
 # Create executable

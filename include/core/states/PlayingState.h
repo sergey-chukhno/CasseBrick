@@ -4,7 +4,7 @@
 #include "core/GameState.h"
 #include "entities/Cannon.h"
 #include "entities/Projectile.h"
-#include "entities/Block.h"
+#include "managers/BlockManager.h"
 #include <SFML/Graphics.hpp>
 #include <memory>
 #include <vector>
@@ -50,8 +50,12 @@ private:
     // Projectile pool
     ProjectilePool projectilePool_;
     
-    // Test blocks for Step 3.1 (temporary, will be replaced by BlockManager in Step 3.2)
-    std::vector<std::unique_ptr<Block>> testBlocks_;
+    // Block manager (wave-based spawning and descent)
+    std::unique_ptr<BlockManager> blockManager_;
+    
+    // Game state
+    int currentLevel_;
+    int score_;
 };
 
 #endif // PLAYINGSTATE_H
