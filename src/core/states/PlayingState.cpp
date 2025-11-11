@@ -82,6 +82,12 @@ void PlayingState::update(float deltaTime)
                 blockManager_->advanceLevel();
                 // Update currentLevel_ to match BlockManager's level
                 currentLevel_ = blockManager_->getCurrentLevel();
+                
+                // Reset projectile count to 50 for the new level
+                if (cannon_) {
+                    cannon_->setProjectileCount(50);
+                }
+                
                 std::cout << "Level " << currentLevel_ << " started" << std::endl;
                 // Continue to next frame - don't check game over if level is complete
                 return;
@@ -208,6 +214,9 @@ void PlayingState::onEnter()
     
     try
     {
+        // Clear projectile hit tracking
+        projectileHitBricks_.clear();
+        
         // Initialize cannon at bottom center
         float cannonX = static_cast<float>(game_->getWindowWidth()) / 2.0f;
         float cannonY = static_cast<float>(game_->getWindowHeight()) - 50.0f; // 50px from bottom
@@ -215,7 +224,7 @@ void PlayingState::onEnter()
         
         cannon_ = std::make_unique<Cannon>(
             sf::Vector2f(cannonX, cannonY),
-            10 // Initial projectile count
+            50 // Initial projectile count
         );
         
         std::cout << "Cannon created successfully" << std::endl;
@@ -278,6 +287,16 @@ void PlayingState::checkProjectileBrickCollisions()
     std::vector<Projectile*> activeProjectiles = projectilePool_.getActiveProjectiles();
     std::vector<Block*> activeBlocks = blockManager_->getActiveBlocks();
     
+    // Clean up hit tracking for deactivated projectiles
+    for (auto it = projectileHitBricks_.begin(); it != projectileHitBricks_.end();) {
+        Projectile* proj = it->first;
+        if (!proj || !proj->isActive()) {
+            it = projectileHitBricks_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    
     // Iterate through all active projectiles
     for (Projectile* projectile : activeProjectiles) {
         if (!projectile || !projectile->isActive()) {
@@ -288,6 +307,23 @@ void PlayingState::checkProjectileBrickCollisions()
         bool hasCollided = false;  // Track if projectile has collided (for bounce direction)
         sf::FloatRect firstCollisionBounds;  // Store first collision for bounce
         
+        // Get or create the list of bricks this projectile has hit
+        auto& hitBricks = projectileHitBricks_[projectile];
+        
+        // Clean up hit tracking: remove bricks that are no longer overlapping
+        // This allows the projectile to hit the same brick again if it moves away and comes back
+        hitBricks.erase(
+            std::remove_if(hitBricks.begin(), hitBricks.end(),
+                [&projectileBounds, this](Brick* brick) {
+                    if (!brick || brick->isDestroyed()) {
+                        return true;  // Remove destroyed bricks
+                    }
+                    // Remove if no longer overlapping (projectile has moved away)
+                    return !checkAABBCollision(projectileBounds, brick->getBounds());
+                }),
+            hitBricks.end()
+        );
+        
         // For each block
         for (Block* block : activeBlocks) {
             if (!block || block->isDestroyed()) {
@@ -297,9 +333,15 @@ void PlayingState::checkProjectileBrickCollisions()
             // Get all bricks in the block
             std::vector<Brick*> bricks = block->getBricks();
             
-            // For each brick (allow multiple hits)
+            // For each brick
             for (Brick* brick : bricks) {
                 if (!brick || brick->isDestroyed()) {
+                    continue;
+                }
+                
+                // Skip if this projectile has already hit this brick and is still overlapping
+                bool alreadyHit = std::find(hitBricks.begin(), hitBricks.end(), brick) != hitBricks.end();
+                if (alreadyHit) {
                     continue;
                 }
                 
@@ -308,11 +350,16 @@ void PlayingState::checkProjectileBrickCollisions()
                 
                 // Check collision (AABB)
                 if (checkAABBCollision(projectileBounds, brickBounds)) {
+                    // Mark this brick as hit by this projectile
+                    hitBricks.push_back(brick);
+                    
                     // Get brick color and position before damage (for explosion effect)
                     sf::Vector2f brickPos = brick->getPosition();
                     sf::Color brickColor = brick->getBaseColor();
                     
                     // Apply damage to brick (1 damage per hit)
+                    // This prevents the same projectile from hitting the same brick multiple times
+                    // until it moves away from the brick (no longer overlapping)
                     bool wasDestroyed = brick->takeDamage(1);
                     
                     // Store first collision for bounce (only bounce once per frame)
@@ -334,15 +381,18 @@ void PlayingState::checkProjectileBrickCollisions()
                         bricksDestroyed_++;
                     }
                     
-                    // Continue checking other bricks (allow multiple hits)
-                    // Don't break here - allow projectile to hit multiple bricks
+                    // Allow projectile to hit multiple different bricks in the same frame
+                    // But prevent hitting the same brick again until it moves away
                 }
             }
         }
         
         // Bounce projectile based on first collision (only bounce once per frame)
+        // Bounce IMMEDIATELY after first collision to move projectile away from brick
         if (hasCollided) {
             bounceProjectileOffBrick(projectile, firstCollisionBounds);
+            // After bouncing, update projectile bounds for overlap checking
+            projectileBounds = projectile->getBounds();
         }
     }
 }
@@ -389,43 +439,48 @@ void PlayingState::bounceProjectileOffBrick(Projectile* projectile, const sf::Fl
     bool movingDown = projectileVel.y > 0;
     bool movingUp = projectileVel.y < 0;
     
+    // Calculate larger offset to ensure projectile moves completely outside brick bounds
+    // Use projectile radius + collision offset to ensure clearance
+    constexpr float PROJECTILE_RADIUS = 6.0f;  // From Projectile.h
+    float safeOffset = PROJECTILE_RADIUS + COLLISION_OFFSET;
+    
     // Determine bounce based on closest edge and velocity direction
     // Use velocity direction as primary indicator, distance as secondary
     if (minDist == distToTop && (movingUp || projectilePos.y < brickCenterY)) {
         // Hit top edge, bounce down (reflect Y velocity downward)
         projectile->setVelocity(sf::Vector2f(projectileVel.x, std::abs(projectileVel.y)));
-        projectile->setPosition(sf::Vector2f(projectilePos.x, brickTop - COLLISION_OFFSET));
+        projectile->setPosition(sf::Vector2f(projectilePos.x, brickTop - safeOffset));
     } else if (minDist == distToBottom && (movingDown || projectilePos.y > brickCenterY)) {
         // Hit bottom edge, bounce up (reflect Y velocity upward)
         projectile->setVelocity(sf::Vector2f(projectileVel.x, -std::abs(projectileVel.y)));
-        projectile->setPosition(sf::Vector2f(projectilePos.x, brickBottom + COLLISION_OFFSET));
+        projectile->setPosition(sf::Vector2f(projectilePos.x, brickBottom + safeOffset));
     } else if (minDist == distToLeft && (movingLeft || projectilePos.x < brickCenterX)) {
         // Hit left edge, bounce right (reflect X velocity rightward)
         projectile->setVelocity(sf::Vector2f(std::abs(projectileVel.x), projectileVel.y));
-        projectile->setPosition(sf::Vector2f(brickLeft - COLLISION_OFFSET, projectilePos.y));
+        projectile->setPosition(sf::Vector2f(brickLeft - safeOffset, projectilePos.y));
     } else if (minDist == distToRight && (movingRight || projectilePos.x > brickCenterX)) {
         // Hit right edge, bounce left (reflect X velocity leftward)
         projectile->setVelocity(sf::Vector2f(-std::abs(projectileVel.x), projectileVel.y));
-        projectile->setPosition(sf::Vector2f(brickRight + COLLISION_OFFSET, projectilePos.y));
+        projectile->setPosition(sf::Vector2f(brickRight + safeOffset, projectilePos.y));
     } else {
         // Fallback: determine based on velocity direction only
         if (std::abs(projectileVel.x) > std::abs(projectileVel.y)) {
             // Horizontal collision (reflect X)
             if (movingRight) {
                 projectile->setVelocity(sf::Vector2f(-std::abs(projectileVel.x), projectileVel.y));
-                projectile->setPosition(sf::Vector2f(brickLeft - COLLISION_OFFSET, projectilePos.y));
+                projectile->setPosition(sf::Vector2f(brickLeft - safeOffset, projectilePos.y));
             } else if (movingLeft) {
                 projectile->setVelocity(sf::Vector2f(std::abs(projectileVel.x), projectileVel.y));
-                projectile->setPosition(sf::Vector2f(brickRight + COLLISION_OFFSET, projectilePos.y));
+                projectile->setPosition(sf::Vector2f(brickRight + safeOffset, projectilePos.y));
             }
         } else {
             // Vertical collision (reflect Y)
             if (movingDown) {
                 projectile->setVelocity(sf::Vector2f(projectileVel.x, -std::abs(projectileVel.y)));
-                projectile->setPosition(sf::Vector2f(projectilePos.x, brickTop - COLLISION_OFFSET));
+                projectile->setPosition(sf::Vector2f(projectilePos.x, brickTop - safeOffset));
             } else if (movingUp) {
                 projectile->setVelocity(sf::Vector2f(projectileVel.x, std::abs(projectileVel.y)));
-                projectile->setPosition(sf::Vector2f(projectilePos.x, brickBottom + COLLISION_OFFSET));
+                projectile->setPosition(sf::Vector2f(projectilePos.x, brickBottom + safeOffset));
             }
         }
     }

@@ -10,6 +10,8 @@
 #include <memory>
 #include <vector>
 #include <deque>
+#include <unordered_map>
+#include <algorithm>
 
 // Forward declaration
 class Game;
@@ -55,6 +57,10 @@ private:
     // Block manager (wave-based spawning and descent)
     std::unique_ptr<BlockManager> blockManager_;
     
+    // Track which bricks each projectile has recently hit (to prevent rapid re-hits)
+    // Maps projectile pointer to a set of brick pointers it has hit
+    std::unordered_map<Projectile*, std::vector<Brick*>> projectileHitBricks_;
+    
     // Game state
     int currentLevel_;
     int score_;
@@ -90,7 +96,7 @@ private:
     std::deque<ExplosionParticle> explosionParticles_;
     
     // Collision detection constants
-    static constexpr float COLLISION_OFFSET = 2.0f;  // Offset to prevent sticking
+    static constexpr float COLLISION_OFFSET = 8.0f;  // Offset to prevent sticking (increased to prevent re-collisions)
     
     /**
      * @brief Checks collisions between projectiles and bricks.

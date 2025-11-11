@@ -248,6 +248,12 @@ void Cannon::decrementProjectileCount()
     }
 }
 
+void Cannon::setProjectileCount(unsigned int count)
+{
+    projectileCount_ = count;
+    updateCounterText();
+}
+
 bool Cannon::shoot(sf::Vector2f& spawnPosition, sf::Vector2f& velocity)
 {
     if (!canShoot())
