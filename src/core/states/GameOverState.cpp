@@ -156,12 +156,12 @@ void GameOverState::handleButtonClick(const sf::Vector2f& mousePos)
     {
         case 0: // RESTART
             std::cout << "Restart button clicked" << std::endl;
-            game_->changeState(std::make_unique<PlayingState>(game_));
+            game_->queueStateChange(std::make_unique<PlayingState>(game_));
             break;
 
         case 1: // MENU
             std::cout << "Menu button clicked" << std::endl;
-            game_->changeState(std::make_unique<MenuState>(game_));
+            game_->queueStateChange(std::make_unique<MenuState>(game_));
             break;
 
         default:

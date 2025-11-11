@@ -10,10 +10,10 @@ class Game;
 class GameState;
 
 /**
- * @brief Settings state with back navigation to previous state.
+ * @brief Settings state for game configuration.
  * 
  * SettingsState is displayed when the player wants to change game settings.
- * It stores a reference to the previous state so it can return to it when closed.
+ * The back button returns to the menu by creating a new MenuState.
  */
 class SettingsState : public GameState
 {
@@ -21,9 +21,8 @@ public:
     /**
      * @brief Constructs a SettingsState.
      * @param game Pointer to the Game instance for state transitions
-     * @param previousState Pointer to the previous state (for back navigation)
      */
-    explicit SettingsState(Game* game, GameState* previousState);
+    explicit SettingsState(Game* game);
 
     /**
      * @brief Destructor.
@@ -38,7 +37,6 @@ public:
 
 private:
     Game* game_;
-    GameState* previousState_;  // Store reference to previous state
 
     // UI elements
     const sf::Font& font_;  // Reference to font from FontManager

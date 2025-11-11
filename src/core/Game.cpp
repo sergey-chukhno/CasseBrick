@@ -5,8 +5,20 @@
 Game::Game()
     : window_(sf::VideoMode(sf::Vector2u(WINDOW_WIDTH, WINDOW_HEIGHT)), WINDOW_TITLE)
     , running_(true)
+    , fadeAlpha_(1.0f)  // Start fully faded (black screen)
+    , fadeSpeed_(FADE_SPEED)
+    , isFading_(true)
+    , fadeDirection_(true)  // Fade in (black to transparent)
 {
     window_.setFramerateLimit(60);
+    
+    // Initialize fade overlay
+    fadeOverlay_.setSize(sf::Vector2f(
+        static_cast<float>(WINDOW_WIDTH),
+        static_cast<float>(WINDOW_HEIGHT)
+    ));
+    fadeOverlay_.setFillColor(sf::Color(0, 0, 0, 255));  // Black
+    fadeOverlay_.setPosition(sf::Vector2f(0, 0));
     
     // Start with MenuState
     changeState(std::make_unique<MenuState>(this));
@@ -31,7 +43,19 @@ void Game::run()
         // Handle window events
         handleWindowEvents();
 
-        // Update current state
+        // Process pending state changes (after event handling is complete)
+        if (pendingStateChange_)
+        {
+            changeState(std::move(pendingStateChange_));
+            pendingStateChange_.reset();
+            // After state change, continue to update/render in the same frame
+            // This ensures the new state is displayed immediately
+        }
+
+        // Update fade transition
+        updateFade(deltaTime);
+
+        // Update and render current state
         if (!stateStack_.empty())
         {
             update(deltaTime);
@@ -56,6 +80,9 @@ void Game::pushState(std::unique_ptr<GameState> state)
     // Push new state
     stateStack_.push_back(std::move(state));
     stateStack_.back()->onEnter();
+
+    // Start fade in for overlay states (like pause)
+    startFade(true);
 }
 
 void Game::popState()
@@ -71,6 +98,9 @@ void Game::popState()
         {
             stateStack_.back()->onEnter();
         }
+
+        // Start fade in when resuming
+        startFade(true);
     }
 }
 
@@ -89,6 +119,15 @@ void Game::changeState(std::unique_ptr<GameState> state)
         stateStack_.push_back(std::move(state));
         stateStack_.back()->onEnter();
     }
+
+    // Start fade in (fade from black to transparent)
+    startFade(true);
+}
+
+void Game::queueStateChange(std::unique_ptr<GameState> state)
+{
+    // Store the state change to be processed after event handling
+    pendingStateChange_ = std::move(state);
 }
 
 GameState* Game::getCurrentState() const
@@ -128,6 +167,47 @@ void Game::update(float deltaTime)
     }
 }
 
+void Game::updateFade(float deltaTime)
+{
+    if (!isFading_)
+    {
+        return;
+    }
+
+    if (fadeDirection_)  // Fading in (black to transparent)
+    {
+        fadeAlpha_ -= fadeSpeed_ * deltaTime;
+        if (fadeAlpha_ <= 0.0f)
+        {
+            fadeAlpha_ = 0.0f;
+            isFading_ = false;
+        }
+    }
+    else  // Fading out (transparent to black)
+    {
+        fadeAlpha_ += fadeSpeed_ * deltaTime;
+        if (fadeAlpha_ >= 1.0f)
+        {
+            fadeAlpha_ = 1.0f;
+            isFading_ = false;
+        }
+    }
+}
+
+void Game::startFade(bool fadeIn)
+{
+    isFading_ = true;
+    fadeDirection_ = fadeIn;
+    if (fadeIn)
+    {
+        fadeAlpha_ = 1.0f;  // Start from black
+    }
+    else
+    {
+        fadeAlpha_ = 0.0f;  // Start from transparent
+    }
+}
+
 void Game::render()
 {
     window_.clear(sf::Color(10, 10, 26)); // Cyberpunk background color (#0a0a1a)
@@ -135,6 +215,14 @@ void Game::render()
     if (!stateStack_.empty())
     {
         stateStack_.back()->render(window_);
+    }
+
+    // Render fade overlay if fading
+    if (fadeAlpha_ > 0.0f)
+    {
+        unsigned char alpha = static_cast<unsigned char>(fadeAlpha_ * 255.0f);
+        fadeOverlay_.setFillColor(sf::Color(0, 0, 0, alpha));
+        window_.draw(fadeOverlay_);
     }
 
     window_.display();

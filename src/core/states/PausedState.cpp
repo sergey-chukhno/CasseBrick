@@ -147,9 +147,8 @@ void PausedState::handleButtonClick(const sf::Vector2f& mousePos)
 
         case 1: // QUIT TO MENU
             std::cout << "Quit to menu button clicked" << std::endl;
-            // Pop pause state first, then change to menu
-            game_->popState();
-            game_->changeState(std::make_unique<MenuState>(game_));
+            // changeState clears the entire stack, so we don't need to pop first
+            game_->queueStateChange(std::make_unique<MenuState>(game_));
             break;
 
         default:
