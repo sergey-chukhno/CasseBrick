@@ -35,6 +35,7 @@ set(SOURCES
     src/core/states/PausedState.cpp
     src/core/states/GameOverState.cpp
     src/core/states/SettingsState.cpp
+    src/entities/Cannon.cpp
 )
 
 # Create executable

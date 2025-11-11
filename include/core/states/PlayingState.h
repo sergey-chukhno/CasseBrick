@@ -2,7 +2,9 @@
 #define PLAYINGSTATE_H
 
 #include "core/GameState.h"
+#include "entities/Cannon.h"
 #include <SFML/Graphics.hpp>
+#include <memory>
 
 // Forward declaration
 class Game;
@@ -38,6 +40,9 @@ private:
     Game* game_;
     const sf::Font& font_;  // Reference to font from FontManager
     sf::Text placeholderText_;
+    
+    // Cannon
+    std::unique_ptr<Cannon> cannon_;
 };
 
 #endif // PLAYINGSTATE_H
