@@ -233,6 +233,17 @@ bool Projectile::isActive() const
     return isActive_;
 }
 
+void Projectile::setVelocity(const sf::Vector2f& velocity)
+{
+    velocity_ = velocity;
+}
+
+void Projectile::setPosition(const sf::Vector2f& position)
+{
+    position_ = position;
+    shape_.setPosition(position_);
+}
+
 // ============================================================================
 // ProjectilePool Implementation
 // ============================================================================
@@ -283,6 +294,28 @@ void ProjectilePool::renderAll(sf::RenderWindow& window) const
 size_t ProjectilePool::getActiveCount() const
 {
     return activeCount_;
+}
+
+std::vector<Projectile*> ProjectilePool::getActiveProjectiles()
+{
+    std::vector<Projectile*> activeProjectiles;
+    for (auto& projectile : pool_) {
+        if (projectile.isActive()) {
+            activeProjectiles.push_back(&projectile);
+        }
+    }
+    return activeProjectiles;
+}
+
+std::vector<const Projectile*> ProjectilePool::getActiveProjectiles() const
+{
+    std::vector<const Projectile*> activeProjectiles;
+    for (const auto& projectile : pool_) {
+        if (projectile.isActive()) {
+            activeProjectiles.push_back(&projectile);
+        }
+    }
+    return activeProjectiles;
 }
 
 void ProjectilePool::clear()

@@ -89,6 +89,13 @@ public:
     void decrementProjectileCount();
 
     /**
+     * @brief Sets the projectile count to a specific value.
+     * Used to reset projectiles at the start of a new level.
+     * @param count New projectile count
+     */
+    void setProjectileCount(unsigned int count);
+
+    /**
      * @brief Shoots a projectile.
      * Returns the spawn position and velocity for the projectile.
      * @param[out] spawnPosition Spawn position of the projectile

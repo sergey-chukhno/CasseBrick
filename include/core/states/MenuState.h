@@ -55,13 +55,28 @@ private:
     std::vector<std::unique_ptr<Button>> buttons_;
     std::vector<std::string> buttonLabels_;
 
+    // Title animation state
+    float titleFloatTime_;          // Time accumulator for floating animation
+    float titleColorTime_;          // Time accumulator for color animation
+    float titleBaseY_;              // Base Y position for floating
+    sf::Vector2f titleBasePosition_; // Base position before floating offset
+
     // Button dimensions
     static constexpr float BUTTON_WIDTH = 300.0f;
     static constexpr float BUTTON_HEIGHT = 60.0f;
     static constexpr float BUTTON_SPACING = 20.0f;
 
-    // Colors
-    static constexpr sf::Color TITLE_COLOR = sf::Color(255, 0, 110);  // Pink #ff006e
+    // Title animation constants
+    static constexpr float TITLE_FLOAT_AMPLITUDE = 15.0f;  // Vertical float amplitude (pixels)
+    static constexpr float TITLE_FLOAT_SPEED = 0.8f;       // Float speed (cycles per second) - slowed down
+    static constexpr float TITLE_COLOR_CHANGE_SPEED = 1.2f; // Color change speed
+
+    // Colors (cyberpunk palette for title flashing)
+    static sf::Color getTitleColorPink() { return sf::Color(255, 0, 110); }    // #ff006e
+    static sf::Color getTitleColorCyan() { return sf::Color(0, 217, 255); }    // #00d9ff
+    static sf::Color getTitleColorPurple() { return sf::Color(170, 0, 255); }  // #aa00ff
+    static sf::Color getTitleColorGreen() { return sf::Color(0, 255, 136); }   // #00ff88
+    static sf::Color getTitleColorYellow() { return sf::Color(255, 221, 0); }  // #ffdd00
     static constexpr sf::Color BUTTON_FILL_COLOR = sf::Color(0, 217, 255, 100);  // Cyan with transparency
     static constexpr sf::Color BUTTON_OUTLINE_COLOR = sf::Color(0, 217, 255);  // Cyan
     static constexpr sf::Color BUTTON_TEXT_COLOR = sf::Color(255, 255, 255);  // White
@@ -70,6 +85,21 @@ private:
      * @brief Initializes the UI elements.
      */
     void initializeUI();
+    
+    /**
+     * @brief Updates title floating and color animations.
+     * @param deltaTime Time elapsed since last frame
+     */
+    void updateTitleAnimations(float deltaTime);
+    
+    /**
+     * @brief Interpolates between two colors.
+     * @param color1 First color
+     * @param color2 Second color
+     * @param t Interpolation factor (0.0 to 1.0)
+     * @return Interpolated color
+     */
+    static sf::Color lerpColor(const sf::Color& color1, const sf::Color& color2, float t);
 };
 
 #endif // MENUSTATE_H
