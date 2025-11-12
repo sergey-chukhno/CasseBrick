@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Site BuildName="(empty)"
+	BuildStamp="20251112-1017-Experimental"
+	Name="(empty)"
+	Generator="ctest-3.31.5"
+	CompilerName=""
+	CompilerVersion=""
+	OSName="Windows"
+	Hostname="ElodieB"
+	OSRelease=" Personal"
+	OSVersion=" (Build 9200)"
+	OSPlatform="AMD64"
+	Is64Bits="1"
+	VendorString=""
+	VendorID="Unknown Manufacturer"
+	FamilyID="0"
+	ModelID="0"
+	ModelName=""
+	ProcessorCacheSize="0"
+	NumberOfLogicalCPU="8"
+	NumberOfPhysicalCPU="4"
+	TotalVirtualMemory="31482"
+	TotalPhysicalMemory="15610"
+	LogicalProcessorsPerPhysical="2"
+	ProcessorClockFrequency="2795"
+	>
+	<Testing>
+		<StartDateTime>Nov 12 11:47 Paris, Madrid</StartDateTime>
+		<StartTestTime>1762944479</StartTestTime>
+		<TestList/>
+		<EndDateTime>Nov 12 11:47 Paris, Madrid</EndDateTime>
+		<EndTestTime>1762944479</EndTestTime>
+		<ElapsedMinutes>0</ElapsedMinutes>
+	</Testing>
+</Site>

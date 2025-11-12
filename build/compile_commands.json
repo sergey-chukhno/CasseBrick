@@ -1,0 +1,104 @@
+[
+{
+  "directory": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/CyberpunkCannonShooter.dir/includes_CXX.rsp -g -std=c++17 -Wall -Wextra -Wpedantic -o CMakeFiles\\CyberpunkCannonShooter.dir\\src\\main.cpp.obj -c C:\\Users\\elodi\\OneDrive\\Desktop\\Projets_plateforme\\LOGICIEL\\B2\\C++\\Casse-Brique\\CasseBrick\\src\\main.cpp",
+  "file": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/src/main.cpp",
+  "output": "CMakeFiles/CyberpunkCannonShooter.dir/src/main.cpp.obj"
+},
+{
+  "directory": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/CyberpunkCannonShooter.dir/includes_CXX.rsp -g -std=c++17 -Wall -Wextra -Wpedantic -o CMakeFiles\\CyberpunkCannonShooter.dir\\src\\core\\GameState.cpp.obj -c C:\\Users\\elodi\\OneDrive\\Desktop\\Projets_plateforme\\LOGICIEL\\B2\\C++\\Casse-Brique\\CasseBrick\\src\\core\\GameState.cpp",
+  "file": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/src/core/GameState.cpp",
+  "output": "CMakeFiles/CyberpunkCannonShooter.dir/src/core/GameState.cpp.obj"
+},
+{
+  "directory": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/CyberpunkCannonShooter.dir/includes_CXX.rsp -g -std=c++17 -Wall -Wextra -Wpedantic -o CMakeFiles\\CyberpunkCannonShooter.dir\\src\\core\\Game.cpp.obj -c C:\\Users\\elodi\\OneDrive\\Desktop\\Projets_plateforme\\LOGICIEL\\B2\\C++\\Casse-Brique\\CasseBrick\\src\\core\\Game.cpp",
+  "file": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/src/core/Game.cpp",
+  "output": "CMakeFiles/CyberpunkCannonShooter.dir/src/core/Game.cpp.obj"
+},
+{
+  "directory": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/CyberpunkCannonShooter.dir/includes_CXX.rsp -g -std=c++17 -Wall -Wextra -Wpedantic -o CMakeFiles\\CyberpunkCannonShooter.dir\\src\\core\\FontManager.cpp.obj -c C:\\Users\\elodi\\OneDrive\\Desktop\\Projets_plateforme\\LOGICIEL\\B2\\C++\\Casse-Brique\\CasseBrick\\src\\core\\FontManager.cpp",
+  "file": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/src/core/FontManager.cpp",
+  "output": "CMakeFiles/CyberpunkCannonShooter.dir/src/core/FontManager.cpp.obj"
+},
+{
+  "directory": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/CyberpunkCannonShooter.dir/includes_CXX.rsp -g -std=c++17 -Wall -Wextra -Wpedantic -o CMakeFiles\\CyberpunkCannonShooter.dir\\src\\ui\\Button.cpp.obj -c C:\\Users\\elodi\\OneDrive\\Desktop\\Projets_plateforme\\LOGICIEL\\B2\\C++\\Casse-Brique\\CasseBrick\\src\\ui\\Button.cpp",
+  "file": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/src/ui/Button.cpp",
+  "output": "CMakeFiles/CyberpunkCannonShooter.dir/src/ui/Button.cpp.obj"
+},
+{
+  "directory": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/CyberpunkCannonShooter.dir/includes_CXX.rsp -g -std=c++17 -Wall -Wextra -Wpedantic -o CMakeFiles\\CyberpunkCannonShooter.dir\\src\\ui\\Starfield.cpp.obj -c C:\\Users\\elodi\\OneDrive\\Desktop\\Projets_plateforme\\LOGICIEL\\B2\\C++\\Casse-Brique\\CasseBrick\\src\\ui\\Starfield.cpp",
+  "file": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/src/ui/Starfield.cpp",
+  "output": "CMakeFiles/CyberpunkCannonShooter.dir/src/ui/Starfield.cpp.obj"
+},
+{
+  "directory": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/CyberpunkCannonShooter.dir/includes_CXX.rsp -g -std=c++17 -Wall -Wextra -Wpedantic -o CMakeFiles\\CyberpunkCannonShooter.dir\\src\\ui\\AnimatedText.cpp.obj -c C:\\Users\\elodi\\OneDrive\\Desktop\\Projets_plateforme\\LOGICIEL\\B2\\C++\\Casse-Brique\\CasseBrick\\src\\ui\\AnimatedText.cpp",
+  "file": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/src/ui/AnimatedText.cpp",
+  "output": "CMakeFiles/CyberpunkCannonShooter.dir/src/ui/AnimatedText.cpp.obj"
+},
+{
+  "directory": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/CyberpunkCannonShooter.dir/includes_CXX.rsp -g -std=c++17 -Wall -Wextra -Wpedantic -o CMakeFiles\\CyberpunkCannonShooter.dir\\src\\core\\states\\MenuState.cpp.obj -c C:\\Users\\elodi\\OneDrive\\Desktop\\Projets_plateforme\\LOGICIEL\\B2\\C++\\Casse-Brique\\CasseBrick\\src\\core\\states\\MenuState.cpp",
+  "file": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/src/core/states/MenuState.cpp",
+  "output": "CMakeFiles/CyberpunkCannonShooter.dir/src/core/states/MenuState.cpp.obj"
+},
+{
+  "directory": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/CyberpunkCannonShooter.dir/includes_CXX.rsp -g -std=c++17 -Wall -Wextra -Wpedantic -o CMakeFiles\\CyberpunkCannonShooter.dir\\src\\core\\states\\PlayingState.cpp.obj -c C:\\Users\\elodi\\OneDrive\\Desktop\\Projets_plateforme\\LOGICIEL\\B2\\C++\\Casse-Brique\\CasseBrick\\src\\core\\states\\PlayingState.cpp",
+  "file": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/src/core/states/PlayingState.cpp",
+  "output": "CMakeFiles/CyberpunkCannonShooter.dir/src/core/states/PlayingState.cpp.obj"
+},
+{
+  "directory": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/CyberpunkCannonShooter.dir/includes_CXX.rsp -g -std=c++17 -Wall -Wextra -Wpedantic -o CMakeFiles\\CyberpunkCannonShooter.dir\\src\\core\\states\\PausedState.cpp.obj -c C:\\Users\\elodi\\OneDrive\\Desktop\\Projets_plateforme\\LOGICIEL\\B2\\C++\\Casse-Brique\\CasseBrick\\src\\core\\states\\PausedState.cpp",
+  "file": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/src/core/states/PausedState.cpp",
+  "output": "CMakeFiles/CyberpunkCannonShooter.dir/src/core/states/PausedState.cpp.obj"
+},
+{
+  "directory": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/CyberpunkCannonShooter.dir/includes_CXX.rsp -g -std=c++17 -Wall -Wextra -Wpedantic -o CMakeFiles\\CyberpunkCannonShooter.dir\\src\\core\\states\\GameOverState.cpp.obj -c C:\\Users\\elodi\\OneDrive\\Desktop\\Projets_plateforme\\LOGICIEL\\B2\\C++\\Casse-Brique\\CasseBrick\\src\\core\\states\\GameOverState.cpp",
+  "file": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/src/core/states/GameOverState.cpp",
+  "output": "CMakeFiles/CyberpunkCannonShooter.dir/src/core/states/GameOverState.cpp.obj"
+},
+{
+  "directory": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/CyberpunkCannonShooter.dir/includes_CXX.rsp -g -std=c++17 -Wall -Wextra -Wpedantic -o CMakeFiles\\CyberpunkCannonShooter.dir\\src\\core\\states\\SettingsState.cpp.obj -c C:\\Users\\elodi\\OneDrive\\Desktop\\Projets_plateforme\\LOGICIEL\\B2\\C++\\Casse-Brique\\CasseBrick\\src\\core\\states\\SettingsState.cpp",
+  "file": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/src/core/states/SettingsState.cpp",
+  "output": "CMakeFiles/CyberpunkCannonShooter.dir/src/core/states/SettingsState.cpp.obj"
+},
+{
+  "directory": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/CyberpunkCannonShooter.dir/includes_CXX.rsp -g -std=c++17 -Wall -Wextra -Wpedantic -o CMakeFiles\\CyberpunkCannonShooter.dir\\src\\entities\\Cannon.cpp.obj -c C:\\Users\\elodi\\OneDrive\\Desktop\\Projets_plateforme\\LOGICIEL\\B2\\C++\\Casse-Brique\\CasseBrick\\src\\entities\\Cannon.cpp",
+  "file": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/src/entities/Cannon.cpp",
+  "output": "CMakeFiles/CyberpunkCannonShooter.dir/src/entities/Cannon.cpp.obj"
+},
+{
+  "directory": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/CyberpunkCannonShooter.dir/includes_CXX.rsp -g -std=c++17 -Wall -Wextra -Wpedantic -o CMakeFiles\\CyberpunkCannonShooter.dir\\src\\entities\\Projectile.cpp.obj -c C:\\Users\\elodi\\OneDrive\\Desktop\\Projets_plateforme\\LOGICIEL\\B2\\C++\\Casse-Brique\\CasseBrick\\src\\entities\\Projectile.cpp",
+  "file": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/src/entities/Projectile.cpp",
+  "output": "CMakeFiles/CyberpunkCannonShooter.dir/src/entities/Projectile.cpp.obj"
+},
+{
+  "directory": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/CyberpunkCannonShooter.dir/includes_CXX.rsp -g -std=c++17 -Wall -Wextra -Wpedantic -o CMakeFiles\\CyberpunkCannonShooter.dir\\src\\entities\\Brick.cpp.obj -c C:\\Users\\elodi\\OneDrive\\Desktop\\Projets_plateforme\\LOGICIEL\\B2\\C++\\Casse-Brique\\CasseBrick\\src\\entities\\Brick.cpp",
+  "file": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/src/entities/Brick.cpp",
+  "output": "CMakeFiles/CyberpunkCannonShooter.dir/src/entities/Brick.cpp.obj"
+},
+{
+  "directory": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/CyberpunkCannonShooter.dir/includes_CXX.rsp -g -std=c++17 -Wall -Wextra -Wpedantic -o CMakeFiles\\CyberpunkCannonShooter.dir\\src\\entities\\Block.cpp.obj -c C:\\Users\\elodi\\OneDrive\\Desktop\\Projets_plateforme\\LOGICIEL\\B2\\C++\\Casse-Brique\\CasseBrick\\src\\entities\\Block.cpp",
+  "file": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/src/entities/Block.cpp",
+  "output": "CMakeFiles/CyberpunkCannonShooter.dir/src/entities/Block.cpp.obj"
+},
+{
+  "directory": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/CyberpunkCannonShooter.dir/includes_CXX.rsp -g -std=c++17 -Wall -Wextra -Wpedantic -o CMakeFiles\\CyberpunkCannonShooter.dir\\src\\managers\\BlockManager.cpp.obj -c C:\\Users\\elodi\\OneDrive\\Desktop\\Projets_plateforme\\LOGICIEL\\B2\\C++\\Casse-Brique\\CasseBrick\\src\\managers\\BlockManager.cpp",
+  "file": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/C++/Casse-Brique/CasseBrick/src/managers/BlockManager.cpp",
+  "output": "CMakeFiles/CyberpunkCannonShooter.dir/src/managers/BlockManager.cpp.obj"
+}
+]
