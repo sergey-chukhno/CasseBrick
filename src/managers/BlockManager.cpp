@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
+#include <iostream>
 
 BlockManager::BlockManager(unsigned int windowWidth, unsigned int windowHeight)
     : windowWidth_(windowWidth)
@@ -39,11 +40,12 @@ void BlockManager::update(float deltaTime, const sf::FloatRect& cannonBounds)
             if (doesBlockTouchCannon(*block, cannonBounds)) {
                 // Game over condition detected in PlayingState
             }
+        } else if (block) {
+            // Block is destroyed, but we still need to update it once to ensure
+            // isDestroyed() returns true (blocks check their bricks in update)
+            block->update(deltaTime);
         }
     }
-    
-    // Remove off-screen blocks
-    removeOffScreenBlocks();
     
     // Handle wave spawning
     if (isSpawning_) {
@@ -60,19 +62,26 @@ void BlockManager::update(float deltaTime, const sf::FloatRect& cannonBounds)
             totalBlocksSpawned_++;
         }
         
-        // Check if wave is complete (all blocks spawned)
+        // Check if wave is complete (all blocks spawned in this wave)
         if (blocksSpawnedInWave_ >= blocksInCurrentWave_) {
             // Wave complete
             isSpawning_ = false;
             
-            // Check if there are more waves
-            if (currentWave_ < currentLevelConfig_.waveCount && 
-                totalBlocksSpawned_ < currentLevelConfig_.blockCount) {
-                // Wait for wave delay before next wave
-                waitingForWaveDelay_ = true;
-                waveSpawnTimer_ = 0.0f;
+            // Check if there are more blocks to spawn (even if we've reached wave count)
+            // This ensures we spawn ALL required blocks, even if wave calculation was off
+            if (totalBlocksSpawned_ < currentLevelConfig_.blockCount) {
+                // Check if we should continue with more waves
+                if (currentWave_ < currentLevelConfig_.waveCount) {
+                    // Wait for wave delay before next wave
+                    waitingForWaveDelay_ = true;
+                    waveSpawnTimer_ = 0.0f;
+                } else {
+                    // We've reached the wave count limit, but still have blocks to spawn
+                    // Continue spawning immediately to ensure all blocks are spawned
+                    startWave();  // Start a new wave to spawn remaining blocks
+                }
             } else {
-                // All waves complete, wait for level completion
+                // All blocks spawned, wait for level completion
                 waitingForWaveDelay_ = false;
             }
         }
@@ -89,21 +98,61 @@ void BlockManager::update(float deltaTime, const sf::FloatRect& cannonBounds)
         }
     }
     
-    // Check level completion (all blocks destroyed or off-screen, and all waves spawned)
-    if (!levelComplete_ && totalBlocksSpawned_ >= currentLevelConfig_.blockCount) {
-        // Check if all blocks are destroyed or off-screen
-        bool allBlocksCleared = true;
-        for (const auto& block : blocks_) {
-            if (block && !block->isDestroyed() && !isBlockOffScreen(*block)) {
-                allBlocksCleared = false;
-                break;
-            }
-        }
-        
-        if (allBlocksCleared) {
-            levelComplete_ = true;
+    // NOTE: Level completion check and block removal happen in updateBlockDestroyedStates()
+    // which is called AFTER collision detection in PlayingState. This ensures blocks are
+    // properly marked as destroyed before we check for level completion.
+}
+
+void BlockManager::updateBlockDestroyedStates(float /* deltaTime */)
+{
+    // Update all blocks to check if they should be marked as destroyed
+    // This is called after collision detection to ensure blocks are marked as destroyed
+    // when all their bricks are destroyed.
+    // We pass 0.0f as deltaTime to Block::update() to check state without moving blocks.
+    for (auto& block : blocks_) {
+        if (block && !block->isDestroyed()) {
+            // Call update with 0.0f deltaTime to check if all bricks are destroyed
+            // without moving the block (blocks are already updated in main update())
+            block->update(0.0f);
         }
     }
+    
+    // Check level completion BEFORE removing blocks
+    // This ensures we can detect when all blocks are destroyed
+    if (!levelComplete_) {
+        // Check if all required blocks have been spawned
+        bool allBlocksSpawned = (totalBlocksSpawned_ >= currentLevelConfig_.blockCount);
+        
+        if (allBlocksSpawned) {
+            // All required blocks have been spawned, check if they're all cleared
+            if (blocks_.empty()) {
+                // All blocks have been removed (destroyed or off-screen)
+                levelComplete_ = true;
+            } else {
+                // Check if all remaining blocks are destroyed or off-screen
+                bool allBlocksCleared = true;
+                
+                for (const auto& block : blocks_) {
+                    if (block) {
+                        if (!block->isDestroyed() && !isBlockOffScreen(*block)) {
+                            // Block is active (not destroyed, not off-screen)
+                            allBlocksCleared = false;
+                            break;
+                        }
+                    }
+                }
+                
+                // Level is complete if all blocks are either destroyed or off-screen
+                if (allBlocksCleared) {
+                    levelComplete_ = true;
+                }
+            }
+        }
+    }
+    
+    // Remove off-screen and destroyed blocks AFTER level completion check
+    // This cleanup helps performance and ensures destroyed blocks don't accumulate
+    removeOffScreenBlocks();
 }
 
 void BlockManager::render(sf::RenderWindow& window) const
@@ -356,13 +405,15 @@ void BlockManager::spawnBlock()
 
 void BlockManager::removeOffScreenBlocks()
 {
-    // Remove blocks that are off-screen (entire block below screen)
+    // Remove blocks that are off-screen (entire block below screen) OR destroyed
+    // This helps keep the blocks_ vector clean and speeds up level completion checks
     blocks_.erase(
         std::remove_if(
             blocks_.begin(),
             blocks_.end(),
             [this](const std::unique_ptr<Block>& block) {
-                return block && isBlockOffScreen(*block);
+                // Remove if block is off-screen OR destroyed
+                return block && (isBlockOffScreen(*block) || block->isDestroyed());
             }
         ),
         blocks_.end()

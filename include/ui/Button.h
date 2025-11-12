@@ -119,13 +119,13 @@ private:
     std::function<void()> onClickCallback_;
 
     // Animation constants
-    static constexpr float HOVER_SCALE = 1.05f;
-    static constexpr float HOVER_LERP_SPEED = 5.0f;  // Units per second
-    static constexpr float GLOW_INTENSITY_MIN = 0.5f;
-    static constexpr float GLOW_INTENSITY_MAX = 1.0f;
+    static constexpr float HOVER_SCALE = 1.12f;  // Increased from 1.05f for more noticeable hover
+    static constexpr float HOVER_LERP_SPEED = 6.0f;  // Faster hover transition
+    static constexpr float GLOW_INTENSITY_MIN = 0.6f;  // Increased minimum glow
+    static constexpr float GLOW_INTENSITY_MAX = 1.2f;  // Increased maximum glow (can exceed 1.0 for brightness)
     static constexpr float CLICK_FLASH_DURATION = 0.1f;
-    static constexpr float GLOW_RADIUS = 10.0f;  // Additional pixels for glow
-    static constexpr float OUTLINE_THICKNESS = 2.5f;
+    static constexpr float GLOW_RADIUS = 12.0f;  // Increased glow radius
+    static constexpr float OUTLINE_THICKNESS = 3.0f;  // Thicker outline for more visibility
 
     /**
      * @brief Updates hover state and animations.
