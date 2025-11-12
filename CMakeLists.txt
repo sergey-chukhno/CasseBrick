@@ -66,6 +66,10 @@ target_link_libraries(${PROJECT_NAME}
 # if(EXISTS ${CMAKE_SOURCE_DIR}/config)
 #     file(COPY ${CMAKE_SOURCE_DIR}/config DESTINATION ${CMAKE_BINARY_DIR})
 # endif()
+# Copy fonts for use on different environments
+if(EXISTS ${CMAKE_SOURCE_DIR}/fonts)
+file(COPY ${CMAKE_SOURCE_DIR}/fonts DESTINATION ${CMAKE_BINARY_DIR})
+endif()
 
 # Compiler-specific options
 if(MSVC)
