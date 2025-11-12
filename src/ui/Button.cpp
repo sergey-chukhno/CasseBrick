@@ -194,19 +194,28 @@ void Button::updateHover(float deltaTime)
 void Button::renderGlow(sf::RenderWindow& window) const
 {
     // Render 3 glow layers with decreasing opacity and increasing size
+    // Enhanced glow with brighter base for more visible hover effect
     for (int i = 0; i < 3; ++i)
     {
-        float layerAlpha = glowIntensity_ * (50.0f - i * 15.0f);  // Decreasing alpha
-        float layerScale = 1.0f + (i + 1) * 0.05f;  // Increasing size
+        float baseAlpha = 70.0f - i * 20.0f;  // Increased base alpha (was 50.0f - i * 15.0f)
+        float layerAlpha = glowIntensity_ * baseAlpha;  // Scale by glow intensity
+        layerAlpha = clamp(layerAlpha, 0.0f, 255.0f);  // Clamp to valid alpha range
+        float layerScale = 1.0f + (i + 1) * 0.06f;  // Slightly larger scale increment
 
         sf::RectangleShape glowLayer(sf::Vector2f(
             size_.x + GLOW_RADIUS * (i + 1) * 2,
             size_.y + GLOW_RADIUS * (i + 1) * 2
         ));
+        
+        // Brighten color when hovering (more intense glow)
+        unsigned char r = static_cast<unsigned char>(std::min(255, static_cast<int>(outlineColor_.r * (0.9f + glowIntensity_ * 0.2f))));
+        unsigned char g = static_cast<unsigned char>(std::min(255, static_cast<int>(outlineColor_.g * (0.9f + glowIntensity_ * 0.2f))));
+        unsigned char b = static_cast<unsigned char>(std::min(255, static_cast<int>(outlineColor_.b * (0.9f + glowIntensity_ * 0.2f))));
+        
         glowLayer.setFillColor(sf::Color(
-            outlineColor_.r,
-            outlineColor_.g,
-            outlineColor_.b,
+            r,
+            g,
+            b,
             static_cast<unsigned char>(layerAlpha)
         ));
         glowLayer.setOrigin(sf::Vector2f(

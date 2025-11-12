@@ -8,6 +8,7 @@
 #include "entities/Projectile.h"
 #include "entities/Brick.h"
 #include "managers/BlockManager.h"
+#include "ui/Starfield.h"
 #include <iostream>
 #include <memory>
 #include <cstdlib>
@@ -24,26 +25,34 @@
 PlayingState::PlayingState(Game* game)
     : game_(game)
     , font_(FontManager::getDefaultFont())
-    , placeholderText_(
-        font_,
-        "PLAYING STATE\n\nPress SPACE or CLICK to shoot\nPress P to Pause\nPress ESC to return to Menu",
-        32
-    )
+    , starfield_(nullptr)  // Will be initialized in onEnter()
     , projectilePool_(100) // Pool size: 100 projectiles
     , currentLevel_(1)  // Will be synced with BlockManager in onEnter()
     , score_(0)
     , displayedScore_(0)
     , bricksDestroyed_(0)
     , highScore_(0)
-    , scoreText_(font_, "Score: 0", 24)
+    , scoreText_(font_, "Score: 0", HUD_SCORE_FONT_SIZE)
+    , levelText_(font_, "Level: 1", HUD_LEVEL_FONT_SIZE)
+    , highScoreText_(font_, "", HUD_HIGH_SCORE_FONT_SIZE)
+    , hudAnimationTime_(0.0f)
+    , scoreGlowIntensity_(HUD_GLOW_INTENSITY_MAX)
+    , levelGlowIntensity_(HUD_GLOW_INTENSITY_MAX)
+    , highScoreGlowIntensity_(HUD_GLOW_INTENSITY_MAX)
+    , levelChangeFlash_(0.0f)
+    , highScoreFlash_(0.0f)
 {
-    // Basic text initialization - positioning will be done in onEnter()
-    placeholderText_.setFillColor(sf::Color(0, 217, 255)); // Cyan
-    placeholderText_.setStyle(sf::Text::Bold);
-    
     // Initialize score text
-    scoreText_.setFillColor(sf::Color(0, 217, 255)); // Cyan
+    scoreText_.setFillColor(getHUDScoreColor());
     scoreText_.setStyle(sf::Text::Bold);
+    
+    // Initialize level text
+    levelText_.setFillColor(getHUDLevelColor());
+    levelText_.setStyle(sf::Text::Bold);
+    
+    // Initialize high score text
+    highScoreText_.setFillColor(getHUDHighScoreColor());
+    highScoreText_.setStyle(sf::Text::Bold);
     
     // Load high score
     loadHighScore();
@@ -51,6 +60,12 @@ PlayingState::PlayingState(Game* game)
 
 void PlayingState::update(float deltaTime)
 {
+    // Update starfield background
+    if (starfield_)
+    {
+        starfield_->update(deltaTime);
+    }
+    
     // Update cannon
     if (cannon_)
     {
@@ -88,6 +103,9 @@ void PlayingState::update(float deltaTime)
                     cannon_->setProjectileCount(50);
                 }
                 
+                // Trigger level change flash effect
+                triggerLevelChangeFlash();
+                
                 std::cout << "Level " << currentLevel_ << " started" << std::endl;
                 // Continue to next frame - don't check game over if level is complete
                 return;
@@ -101,6 +119,7 @@ void PlayingState::update(float deltaTime)
                 if (score_ > highScore_) {
                     highScore_ = score_;
                     saveHighScore();
+                    triggerHighScoreFlash();
                 }
                 
                 // Trigger game over with statistics
@@ -114,11 +133,26 @@ void PlayingState::update(float deltaTime)
         
         // Update animated score display
         updateScoreDisplay(deltaTime);
+        
+        // Update HUD animations (glow effects, flashes)
+        updateHUDAnimations(deltaTime);
+        
+        // Update level display when level changes
+        updateLevelDisplay();
+        
+        // Update high score display
+        updateHighScoreDisplay();
     }
 }
 
 void PlayingState::render(sf::RenderWindow& window)
 {
+    // Render starfield background first
+    if (starfield_)
+    {
+        starfield_->render(window);
+    }
+    
     // Render blocks (through BlockManager, behind projectiles and cannon)
     if (blockManager_)
     {
@@ -137,11 +171,20 @@ void PlayingState::render(sf::RenderWindow& window)
         cannon_->render(window);
     }
     
-    // Render score display (top-left corner)
-    window.draw(scoreText_);
+    // Render HUD elements with strong cyberpunk glow effects
+    // Score (top-left)
+    renderTextWithGlow(window, scoreText_, getHUDScoreColor(), scoreGlowIntensity_);
     
-    // Draw placeholder text (temporary, will be removed later)
-    window.draw(placeholderText_);
+    // Level (below score, top-left)
+    renderTextWithGlow(window, levelText_, getHUDLevelColor(), levelGlowIntensity_, 
+                       levelChangeFlash_ > 0.0f ? 1.0f + levelChangeFlash_ * 0.5f : 1.0f);
+    
+    // High score (top-right, only if > 0)
+    if (highScore_ > 0) {
+        renderTextWithGlow(window, highScoreText_, getHUDHighScoreColor(), 
+                          highScoreGlowIntensity_,
+                          highScoreFlash_ > 0.0f ? 1.0f + highScoreFlash_ * 0.5f : 1.0f);
+    }
 }
 
 void PlayingState::handleEvent(const sf::Event& event)
@@ -235,28 +278,35 @@ void PlayingState::onEnter()
             game_->getWindowHeight()
         );
         
+        // Initialize starfield background
+        starfield_ = std::make_unique<Starfield>(
+            150,  // Star count for gameplay (slightly less than menu for performance)
+            sf::Vector2u(game_->getWindowWidth(), game_->getWindowHeight())
+        );
+        
         // Initialize game state
         score_ = 0;
         displayedScore_ = 0;
         bricksDestroyed_ = 0;
         
-        // Initialize score display
+        // Initialize HUD displays
         initializeScoreDisplay();
+        initializeLevelDisplay();
+        initializeHighScoreDisplay();
+        
+        // Reset HUD animation state
+        hudAnimationTime_ = 0.0f;
+        scoreGlowIntensity_ = HUD_GLOW_INTENSITY_MAX;
+        levelGlowIntensity_ = HUD_GLOW_INTENSITY_MAX;
+        highScoreGlowIntensity_ = HUD_GLOW_INTENSITY_MAX;
+        levelChangeFlash_ = 0.0f;
+        highScoreFlash_ = 0.0f;
         
         // Start level 1
         blockManager_->startLevel(1);
         // Sync currentLevel_ with BlockManager's level
         currentLevel_ = blockManager_->getCurrentLevel();
         std::cout << "Level " << currentLevel_ << " started" << std::endl;
-        
-        // Center placeholder text now that we're safely in the state stack
-        // SFML 3.0: Rect uses .size (Vector2f) instead of .width/.height
-        sf::FloatRect textBounds = placeholderText_.getLocalBounds();
-        placeholderText_.setOrigin(sf::Vector2f(textBounds.size.x / 2.0f, textBounds.size.y / 2.0f));
-        placeholderText_.setPosition(sf::Vector2f(
-            static_cast<float>(game_->getWindowWidth()) / 2.0f,
-            100.0f // Position above cannon
-        ));
         
         std::cout << "PlayingState initialization complete" << std::endl;
     }
@@ -612,7 +662,7 @@ void PlayingState::updateScoreDisplay(float deltaTime)
 void PlayingState::initializeScoreDisplay()
 {
     // Set score text position (top-left corner)
-    scoreText_.setPosition(sf::Vector2f(20.0f, 20.0f));
+    scoreText_.setPosition(sf::Vector2f(HUD_LEFT_MARGIN, HUD_TOP_MARGIN));
     
     // Initialize displayed score
     displayedScore_ = score_;
@@ -621,6 +671,191 @@ void PlayingState::initializeScoreDisplay()
     std::stringstream ss;
     ss << "Score: " << displayedScore_;
     scoreText_.setString(ss.str());
+}
+
+void PlayingState::initializeLevelDisplay()
+{
+    // Set level text position (below score, top-left)
+    levelText_.setPosition(sf::Vector2f(HUD_LEFT_MARGIN, HUD_TOP_MARGIN + HUD_TEXT_SPACING));
+    
+    // Set initial level text
+    std::stringstream ss;
+    ss << "Level: " << currentLevel_;
+    levelText_.setString(ss.str());
+}
+
+void PlayingState::initializeHighScoreDisplay()
+{
+    // Set high score text position (top-right corner)
+    // Position will be updated in onEnter() when window size is available
+    highScoreText_.setPosition(sf::Vector2f(0.0f, HUD_TOP_MARGIN));
+    
+    // Set initial high score text (only if high score > 0)
+    if (highScore_ > 0) {
+        std::stringstream ss;
+        ss << "High: " << highScore_;
+        highScoreText_.setString(ss.str());
+    } else {
+        highScoreText_.setString("");
+    }
+}
+
+void PlayingState::updateHighScoreDisplay()
+{
+    // Update high score text position (recalculate in case window was resized)
+    float windowWidth = static_cast<float>(game_->getWindowWidth());
+    sf::FloatRect textBounds = highScoreText_.getLocalBounds();
+    highScoreText_.setPosition(sf::Vector2f(windowWidth - textBounds.size.x - HUD_LEFT_MARGIN, HUD_TOP_MARGIN));
+    
+    // Update high score text (only if high score > 0)
+    if (highScore_ > 0) {
+        std::stringstream ss;
+        ss << "High: " << highScore_;
+        highScoreText_.setString(ss.str());
+        
+        // Recalculate position after updating text
+        textBounds = highScoreText_.getLocalBounds();
+        highScoreText_.setPosition(sf::Vector2f(windowWidth - textBounds.size.x - HUD_LEFT_MARGIN, HUD_TOP_MARGIN));
+    } else {
+        highScoreText_.setString("");
+    }
+}
+
+void PlayingState::updateLevelDisplay()
+{
+    // Update level text
+    std::stringstream ss;
+    ss << "Level: " << currentLevel_;
+    levelText_.setString(ss.str());
+}
+
+void PlayingState::updateHUDAnimations(float deltaTime)
+{
+    // Update animation time accumulator
+    hudAnimationTime_ += deltaTime;
+    
+    // Update glow intensities using sine wave for smooth pulsing
+    // Score glow: continuous pulse
+    float scorePulse = std::sin(HUD_GLOW_PULSE_SPEED * hudAnimationTime_ * 2.0f * static_cast<float>(M_PI));
+    scoreGlowIntensity_ = HUD_GLOW_INTENSITY_MIN + (HUD_GLOW_INTENSITY_MAX - HUD_GLOW_INTENSITY_MIN) * 
+                          (0.5f + 0.5f * scorePulse);
+    
+    // Level glow: continuous pulse (slightly offset for variation)
+    float levelPulse = std::sin(HUD_GLOW_PULSE_SPEED * hudAnimationTime_ * 2.0f * static_cast<float>(M_PI) + 
+                                 static_cast<float>(M_PI) * 0.3f);
+    levelGlowIntensity_ = HUD_GLOW_INTENSITY_MIN + (HUD_GLOW_INTENSITY_MAX - HUD_GLOW_INTENSITY_MIN) * 
+                          (0.5f + 0.5f * levelPulse);
+    
+    // High score glow: continuous pulse (slightly offset for variation)
+    float highScorePulse = std::sin(HUD_GLOW_PULSE_SPEED * hudAnimationTime_ * 2.0f * static_cast<float>(M_PI) + 
+                                     static_cast<float>(M_PI) * 0.6f);
+    highScoreGlowIntensity_ = HUD_GLOW_INTENSITY_MIN + (HUD_GLOW_INTENSITY_MAX - HUD_GLOW_INTENSITY_MIN) * 
+                              (0.5f + 0.5f * highScorePulse);
+    
+    // Update level change flash (fade out)
+    if (levelChangeFlash_ > 0.0f) {
+        levelChangeFlash_ -= HUD_FLASH_FADE_SPEED * deltaTime;
+        levelChangeFlash_ = std::max(0.0f, levelChangeFlash_);
+    }
+    
+    // Update high score flash (fade out)
+    if (highScoreFlash_ > 0.0f) {
+        highScoreFlash_ -= HUD_FLASH_FADE_SPEED * deltaTime;
+        highScoreFlash_ = std::max(0.0f, highScoreFlash_);
+    }
+}
+
+void PlayingState::renderTextWithGlow(sf::RenderWindow& window, const sf::Text& text, 
+                                      const sf::Color& baseColor, float glowIntensity, 
+                                      float flashAlpha) const
+{
+    // Render multiple glow layers (strong cyberpunk glow)
+    // Use offset-based glow (similar to AnimatedText) for better control
+    for (int i = 0; i < HUD_GLOW_LAYERS; ++i) {
+        float layerAlpha = static_cast<float>(HUD_GLOW_ALPHA_BASE - (i * HUD_GLOW_ALPHA_DECREMENT));
+        layerAlpha = std::max(0.0f, layerAlpha);
+        
+        // Apply glow intensity and flash alpha
+        float alpha = layerAlpha * glowIntensity * flashAlpha;
+        alpha = std::max(0.0f, std::min(255.0f, alpha));
+        
+        // Calculate offset for this layer (increasing offset for outer layers, minimal)
+        float offset = static_cast<float>(i + 1) * 0.8f;  // 0.8px, 1.6px (even smaller for minimal glow)
+        
+        // Render glow in 8 directions (up, down, left, right, and diagonals) for full glow effect
+        std::vector<sf::Vector2f> offsets = {
+            sf::Vector2f(0.0f, -offset),      // Up
+            sf::Vector2f(0.0f, offset),       // Down
+            sf::Vector2f(-offset, 0.0f),      // Left
+            sf::Vector2f(offset, 0.0f),       // Right
+            sf::Vector2f(-offset, -offset),   // Up-left
+            sf::Vector2f(offset, -offset),    // Up-right
+            sf::Vector2f(-offset, offset),    // Down-left
+            sf::Vector2f(offset, offset)      // Down-right
+        };
+        
+        // Brighten color for glow (subtle increase for smaller glow)
+        unsigned char r = static_cast<unsigned char>(std::min(255, static_cast<int>(baseColor.r * 1.15f) + 15));
+        unsigned char g = static_cast<unsigned char>(std::min(255, static_cast<int>(baseColor.g * 1.15f) + 15));
+        unsigned char b = static_cast<unsigned char>(std::min(255, static_cast<int>(baseColor.b * 1.15f) + 15));
+        
+        sf::Color glowColor(r, g, b, static_cast<unsigned char>(alpha));
+        
+        // Render glow text at each offset position
+        for (const auto& offsetVec : offsets) {
+            sf::Text glowText = text;
+            glowText.setPosition(text.getPosition() + offsetVec);
+            glowText.setFillColor(glowColor);
+            glowText.setOutlineColor(glowColor);
+            glowText.setOutlineThickness(0.5f);
+            window.draw(glowText);
+        }
+        
+        // Also render center glow (slightly larger character size for inner glow)
+        if (i < 2) {  // Only for inner layers
+            sf::Text centerGlow = text;
+            unsigned int originalSize = text.getCharacterSize();
+            centerGlow.setCharacterSize(static_cast<unsigned int>(originalSize * (1.0f + HUD_GLOW_SCALE_STEP * (i + 1))));
+            
+            // Adjust position to keep centered
+            sf::FloatRect originalBounds = text.getLocalBounds();
+            sf::FloatRect scaledBounds = centerGlow.getLocalBounds();
+            sf::Vector2f centerOffset((originalBounds.size.x - scaledBounds.size.x) / 2.0f,
+                                     (originalBounds.size.y - scaledBounds.size.y) / 2.0f);
+            centerGlow.setPosition(text.getPosition() + centerOffset);
+            centerGlow.setFillColor(glowColor);
+            centerGlow.setOutlineColor(glowColor);
+            centerGlow.setOutlineThickness(0.5f);
+            window.draw(centerGlow);
+        }
+    }
+    
+    // Render main text on top (with flash effect if applicable)
+    sf::Text mainText = text;
+    sf::Color textColor = baseColor;
+    
+    // Apply flash effect (brighten when flashing)
+    if (flashAlpha > 1.0f) {
+        float flashBrightness = 1.0f + (flashAlpha - 1.0f) * 0.4f;
+        textColor.r = static_cast<unsigned char>(std::min(255, static_cast<int>(baseColor.r * flashBrightness)));
+        textColor.g = static_cast<unsigned char>(std::min(255, static_cast<int>(baseColor.g * flashBrightness)));
+        textColor.b = static_cast<unsigned char>(std::min(255, static_cast<int>(baseColor.b * flashBrightness)));
+    }
+    
+    mainText.setFillColor(textColor);
+    mainText.setOutlineColor(textColor);
+    mainText.setOutlineThickness(1.0f);
+    window.draw(mainText);
+}
+
+void PlayingState::triggerLevelChangeFlash()
+{
+    levelChangeFlash_ = 1.0f;
+}
+
+void PlayingState::triggerHighScoreFlash()
+{
+    highScoreFlash_ = 1.0f;
 }
 
 void PlayingState::loadHighScore()

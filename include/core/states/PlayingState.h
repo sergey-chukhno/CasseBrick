@@ -6,6 +6,7 @@
 #include "entities/Projectile.h"
 #include "entities/Brick.h"
 #include "managers/BlockManager.h"
+#include "ui/Starfield.h"
 #include <SFML/Graphics.hpp>
 #include <memory>
 #include <vector>
@@ -46,7 +47,9 @@ public:
 private:
     Game* game_;
     const sf::Font& font_;  // Reference to font from FontManager
-    sf::Text placeholderText_;
+    
+    // Background
+    std::unique_ptr<Starfield> starfield_;  // Starfield background
     
     // Cannon
     std::unique_ptr<Cannon> cannon_;
@@ -71,8 +74,18 @@ private:
     int highScore_;
     static constexpr const char* HIGH_SCORE_FILE = "highscore.txt";
     
-    // Score display
+    // HUD display elements
     sf::Text scoreText_;
+    sf::Text levelText_;
+    sf::Text highScoreText_;
+    
+    // HUD animation state
+    float hudAnimationTime_;        // Time accumulator for animations
+    float scoreGlowIntensity_;      // Glow intensity for score (0.7-1.0)
+    float levelGlowIntensity_;      // Glow intensity for level (0.7-1.0)
+    float highScoreGlowIntensity_;  // Glow intensity for high score (0.7-1.0)
+    float levelChangeFlash_;        // Flash effect when level changes (0.0-1.0)
+    float highScoreFlash_;          // Flash effect when high score updates (0.0-1.0)
     
     // Score calculation constants
     static constexpr int BASE_SCORE_PER_BRICK = 10;
@@ -83,6 +96,35 @@ private:
     
     // Animated score constants
     static constexpr float SCORE_ANIMATION_SPEED = 500.0f;  // Points per second for count-up
+    
+    // HUD layout constants
+    static constexpr float HUD_LEFT_MARGIN = 20.0f;
+    static constexpr float HUD_TOP_MARGIN = 20.0f;
+    static constexpr float HUD_RIGHT_MARGIN = 200.0f;
+    static constexpr float HUD_TEXT_SPACING = 40.0f;  // Space between score and level
+    
+    // HUD color helper functions (cyberpunk palette)
+    static sf::Color getHUDScoreColor() { return sf::Color(0, 217, 255); }      // Cyan #00d9ff
+    static sf::Color getHUDLevelColor() { return sf::Color(0, 217, 255); }      // Cyan #00d9ff
+    static sf::Color getHUDHighScoreColor() { return sf::Color(255, 0, 110); }  // Pink #ff006e
+    
+    // HUD font sizes
+    static constexpr unsigned int HUD_SCORE_FONT_SIZE = 28;
+    static constexpr unsigned int HUD_LEVEL_FONT_SIZE = 22;
+    static constexpr unsigned int HUD_HIGH_SCORE_FONT_SIZE = 22;
+    
+    // HUD glow effect constants (minimal glow for better text readability)
+    static constexpr int HUD_GLOW_LAYERS = 2;           // Further reduced layers (was 3)
+    static constexpr float HUD_GLOW_SCALE_STEP = 0.05f; // Smaller scale increment (was 0.08f)
+    static constexpr unsigned char HUD_GLOW_ALPHA_BASE = 40;      // Much reduced base alpha (was 80)
+    static constexpr unsigned char HUD_GLOW_ALPHA_DECREMENT = 15; // Alpha decrease per layer (was 20)
+    static constexpr float HUD_GLOW_PULSE_SPEED = 1.5f; // Slower pulse speed (was 2.0f)
+    static constexpr float HUD_GLOW_INTENSITY_MIN = 0.4f; // Lower minimum glow intensity (was 0.6f)
+    static constexpr float HUD_GLOW_INTENSITY_MAX = 0.7f; // Lower maximum glow intensity (was 0.9f)
+    
+    // HUD flash effect constants
+    static constexpr float HUD_FLASH_DURATION = 0.8f;   // Flash duration in seconds
+    static constexpr float HUD_FLASH_FADE_SPEED = 2.0f; // Flash fade speed
     
     // Explosion particle system
     struct ExplosionParticle {
@@ -161,6 +203,54 @@ private:
      * @brief Initializes score display text.
      */
     void initializeScoreDisplay();
+    
+    /**
+     * @brief Initializes level display text.
+     */
+    void initializeLevelDisplay();
+    
+    /**
+     * @brief Initializes high score display text.
+     */
+    void initializeHighScoreDisplay();
+    
+    /**
+     * @brief Updates level display text.
+     */
+    void updateLevelDisplay();
+    
+    /**
+     * @brief Updates high score display text.
+     */
+    void updateHighScoreDisplay();
+    
+    /**
+     * @brief Updates HUD animations (glow effects, flashes).
+     * @param deltaTime Time elapsed since last frame
+     */
+    void updateHUDAnimations(float deltaTime);
+    
+    /**
+     * @brief Renders text with strong cyberpunk glow effect.
+     * @param window Render window
+     * @param text Text to render
+     * @param baseColor Base color of the text
+     * @param glowIntensity Glow intensity multiplier (0.7-1.0)
+     * @param flashAlpha Flash alpha multiplier (0.0-1.0, for flash effects)
+     */
+    void renderTextWithGlow(sf::RenderWindow& window, const sf::Text& text, 
+                            const sf::Color& baseColor, float glowIntensity, 
+                            float flashAlpha = 1.0f) const;
+    
+    /**
+     * @brief Triggers level change flash effect.
+     */
+    void triggerLevelChangeFlash();
+    
+    /**
+     * @brief Triggers high score flash effect.
+     */
+    void triggerHighScoreFlash();
     
     /**
      * @brief Loads high score from file.
