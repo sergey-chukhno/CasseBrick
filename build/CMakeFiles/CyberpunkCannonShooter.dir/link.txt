@@ -1,3 +1,0 @@
-C:\mingw64\bin\cmake.exe -E rm -f CMakeFiles\CyberpunkCannonShooter.dir/objects.a
-C:\msys64\ucrt64\bin\ar.exe qc CMakeFiles\CyberpunkCannonShooter.dir/objects.a @CMakeFiles\CyberpunkCannonShooter.dir\objects1.rsp
-C:\msys64\ucrt64\bin\g++.exe -g -Wl,--whole-archive CMakeFiles\CyberpunkCannonShooter.dir/objects.a -Wl,--no-whole-archive -o bin\CyberpunkCannonShooter.exe -Wl,--out-implib,lib\libCyberpunkCannonShooter.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\CyberpunkCannonShooter.dir\linkLibs.rsp
