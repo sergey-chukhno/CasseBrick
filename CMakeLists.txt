@@ -16,6 +16,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
+# Spécifie le chemin vers SFML compilé avec ton GCC 14.2.0
+set(SFML_DIR "C:/Users/Louis/Documents/libraries/SFML-3.0.0-compiled/lib/cmake/SFML")
+
 # Find SFML (version 3.0 or later)
 # Note: Graphics automatically includes System and Window
 # Audio automatically includes System
@@ -57,6 +60,63 @@ target_link_libraries(${PROJECT_NAME}
     SFML::Audio
 )
 
+# Copie automatique des DLLs nécessaires (Windows uniquement)
+if(WIN32)
+    # Copie les DLLs SFML
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:SFML::System>
+            $<TARGET_FILE:SFML::Window>
+            $<TARGET_FILE:SFML::Graphics>
+            $<TARGET_FILE:SFML::Audio>
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        COMMENT "Copying SFML DLLs to output directory"
+    )
+    
+    # Copie les DLLs MinGW et dépendances système
+    get_filename_component(MINGW_BIN_PATH ${CMAKE_CXX_COMPILER} DIRECTORY)
+    
+    set(REQUIRED_DLLS
+        # Runtime MinGW
+        "${MINGW_BIN_PATH}/libstdc++-6.dll"
+        "${MINGW_BIN_PATH}/libgcc_s_seh-1.dll"
+        "${MINGW_BIN_PATH}/libwinpthread-1.dll"
+        # Dépendances SFML (FreeType)
+        "${MINGW_BIN_PATH}/libfreetype-6.dll"
+        "${MINGW_BIN_PATH}/libbz2-1.dll"
+        "${MINGW_BIN_PATH}/libpng16-16.dll"
+        "${MINGW_BIN_PATH}/zlib1.dll"
+        "${MINGW_BIN_PATH}/libbrotlidec.dll"
+        "${MINGW_BIN_PATH}/libbrotlicommon.dll"
+        "${MINGW_BIN_PATH}/libharfbuzz-0.dll"
+        "${MINGW_BIN_PATH}/libglib-2.0-0.dll"
+        "${MINGW_BIN_PATH}/libgraphite2.dll"
+        "${MINGW_BIN_PATH}/libintl-8.dll"
+        "${MINGW_BIN_PATH}/libiconv-2.dll"
+        "${MINGW_BIN_PATH}/libpcre2-8-0.dll"
+        # Dépendances SFML (OpenAL, Audio)
+        "${MINGW_BIN_PATH}/OpenAL32.dll"
+        "${MINGW_BIN_PATH}/libFLAC.dll"
+        "${MINGW_BIN_PATH}/libvorbis-0.dll"
+        "${MINGW_BIN_PATH}/libvorbisenc-2.dll"
+        "${MINGW_BIN_PATH}/libvorbisfile-3.dll"
+        "${MINGW_BIN_PATH}/libogg-0.dll"
+    )
+    
+    foreach(DLL ${REQUIRED_DLLS})
+        if(EXISTS ${DLL})
+            add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    ${DLL}
+                    $<TARGET_FILE_DIR:${PROJECT_NAME}>
+                COMMENT "Copying ${DLL}"
+            )
+        else()
+            message(WARNING "DLL not found (will be skipped): ${DLL}")
+        endif()
+    endforeach()
+endif()
+
 # Copy assets to build directory (for development)
 # Note: This will be enabled when we have actual assets to copy
 # For now, we'll skip this since directories are empty
@@ -66,9 +126,10 @@ target_link_libraries(${PROJECT_NAME}
 # if(EXISTS ${CMAKE_SOURCE_DIR}/config)
 #     file(COPY ${CMAKE_SOURCE_DIR}/config DESTINATION ${CMAKE_BINARY_DIR})
 # endif()
+
 # Copy fonts for use on different environments
 if(EXISTS ${CMAKE_SOURCE_DIR}/fonts)
-file(COPY ${CMAKE_SOURCE_DIR}/fonts DESTINATION ${CMAKE_BINARY_DIR})
+    file(COPY ${CMAKE_SOURCE_DIR}/fonts DESTINATION ${CMAKE_BINARY_DIR})
 endif()
 
 # Compiler-specific options
@@ -84,13 +145,29 @@ enable_testing()
 # Test subdirectory (will be added later)
 # add_subdirectory(tests)
 
+# Messages de diagnostic
+message(STATUS "========================================")
 message(STATUS "Project: ${PROJECT_NAME}")
 message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "Compiler: ${CMAKE_CXX_COMPILER}")
+message(STATUS "Compiler Version: ${CMAKE_CXX_COMPILER_VERSION}")
+
+if(MINGW)
+    execute_process(
+        COMMAND ${CMAKE_CXX_COMPILER} -dumpmachine
+        OUTPUT_VARIABLE MINGW_ARCH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    message(STATUS "MinGW Architecture: ${MINGW_ARCH}")
+endif()
+
 if(SFML_VERSION)
     message(STATUS "SFML Version: ${SFML_VERSION}")
 endif()
+
 if(SFML_INCLUDE_DIR)
     message(STATUS "SFML Include: ${SFML_INCLUDE_DIR}")
 endif()
 
+message(STATUS "========================================")
