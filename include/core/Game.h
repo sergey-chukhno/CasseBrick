@@ -109,6 +109,13 @@ public:
    */
   unsigned int getWindowHeight() const { return WINDOW_HEIGHT; }
 
+  // Cyberpunk Color Palette (public for use by other classes)
+  static const sf::Color NEON_PINK;   // #ff006e
+  static const sf::Color NEON_CYAN;   // #00d9ff
+  static const sf::Color NEON_PURPLE; // #9d4edd
+  static const sf::Color NEON_GREEN;  // #06ffa5
+  static const sf::Color BG_DARK;     // #0a0a1a
+
 private:
   // Window constants
   static constexpr unsigned int WINDOW_WIDTH = 1280;

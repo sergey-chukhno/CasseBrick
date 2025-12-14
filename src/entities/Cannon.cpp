@@ -1,6 +1,7 @@
 #include "entities/Cannon.h"
 #include "core/AudioManager.h"
 #include "core/FontManager.h"
+#include "core/Game.h"
 #include <cmath>
 #include <exception>
 #include <iostream>
@@ -30,7 +31,7 @@ Cannon::Cannon(const sf::Vector2f &position, unsigned int projectileCount)
       barrelRing1_(BARREL_RING_RADIUS), barrelRing2_(BARREL_RING_RADIUS),
       barrelFin1_(sf::Vector2f(BARREL_FIN_WIDTH, BARREL_FIN_LENGTH)),
       barrelFin2_(sf::Vector2f(BARREL_FIN_WIDTH, BARREL_FIN_LENGTH)),
-      counterText_(FontManager::getDefaultFont(), "", 20),
+      counterText_(FontManager::getBodyFont(), "", 20),
       projectileCount_(projectileCount) {
   try {
     // Initialize base components
@@ -83,14 +84,14 @@ void Cannon::render(sf::RenderWindow &window) const {
   }
 
   // Render glow effects for base components (behind main shapes)
-  renderGlow(window, baseBody_, CANNON_PRIMARY, glowIntensity_);
-  renderGlow(window, baseLeftPanel_, CANNON_SECONDARY, glowIntensity_ * 0.8f);
-  renderGlow(window, baseRightPanel_, CANNON_SECONDARY, glowIntensity_ * 0.8f);
-  renderGlow(window, baseFrontPanel_, CANNON_ACCENT, glowIntensity_ * 0.9f);
+  renderGlow(window, baseBody_, Game::NEON_CYAN, glowIntensity_);
+  renderGlow(window, baseLeftPanel_, Game::NEON_PURPLE, glowIntensity_ * 0.8f);
+  renderGlow(window, baseRightPanel_, Game::NEON_PURPLE, glowIntensity_ * 0.8f);
+  renderGlow(window, baseFrontPanel_, Game::NEON_PINK, glowIntensity_ * 0.9f);
 
   // Render glow for barrel components (behind main shapes)
-  renderGlow(window, barrelMain_, CANNON_PRIMARY, glowIntensity_);
-  renderGlow(window, barrelMuzzle_, CANNON_SECONDARY, glowIntensity_ * 0.9f);
+  renderGlow(window, barrelMain_, Game::NEON_CYAN, glowIntensity_);
+  renderGlow(window, barrelMuzzle_, Game::NEON_PURPLE, glowIntensity_ * 0.9f);
 
   // Render base components (stationary, in order from back to front)
   window.draw(baseBody_);
@@ -102,13 +103,13 @@ void Cannon::render(sf::RenderWindow &window) const {
   // Create a temporary core shape for glow rendering with current pulse alpha
   sf::CircleShape coreForGlow = baseCore_;
   coreForGlow.setFillColor(
-      sf::Color(CANNON_CORE.r, CANNON_CORE.g, CANNON_CORE.b,
+      sf::Color(Game::NEON_PINK.r, Game::NEON_PINK.g, Game::NEON_PINK.b,
                 static_cast<unsigned char>(corePulseAlpha_ * 255.0f)));
-  renderGlow(window, coreForGlow, CANNON_CORE, corePulseAlpha_);
+  renderGlow(window, coreForGlow, Game::NEON_PINK, corePulseAlpha_);
 
   // Render energy core with pulsating alpha
   sf::CircleShape core = baseCore_;
-  sf::Color coreColor = CANNON_CORE;
+  sf::Color coreColor = Game::NEON_PINK;
   coreColor.a = static_cast<unsigned char>(corePulseAlpha_ * 255.0f);
   core.setFillColor(coreColor);
   window.draw(core);
@@ -121,12 +122,12 @@ void Cannon::render(sf::RenderWindow &window) const {
     // alpha
     float redBlend = barrelRedPulseAlpha_; // 0.0 = cyan, 1.0 = red
     barrelMainWithRed.setFillColor(sf::Color(
-        static_cast<unsigned char>(CANNON_PRIMARY.r * (1.0f - redBlend) +
-                                   BARREL_RED.r * redBlend),
-        static_cast<unsigned char>(CANNON_PRIMARY.g * (1.0f - redBlend) +
-                                   BARREL_RED.g * redBlend),
-        static_cast<unsigned char>(CANNON_PRIMARY.b * (1.0f - redBlend) +
-                                   BARREL_RED.b * redBlend)));
+        static_cast<unsigned char>(Game::NEON_CYAN.r * (1.0f - redBlend) +
+                                   Game::NEON_PINK.r * redBlend),
+        static_cast<unsigned char>(Game::NEON_CYAN.g * (1.0f - redBlend) +
+                                   Game::NEON_PINK.g * redBlend),
+        static_cast<unsigned char>(Game::NEON_CYAN.b * (1.0f - redBlend) +
+                                   Game::NEON_PINK.b * redBlend)));
   }
   window.draw(barrelMainWithRed);
 
@@ -137,12 +138,12 @@ void Cannon::render(sf::RenderWindow &window) const {
     // alpha
     float redBlend = barrelRedPulseAlpha_; // 0.0 = cyan, 1.0 = red
     barrelMuzzleWithRed.setFillColor(sf::Color(
-        static_cast<unsigned char>(CANNON_SECONDARY.r * (1.0f - redBlend) +
-                                   BARREL_RED.r * redBlend),
-        static_cast<unsigned char>(CANNON_SECONDARY.g * (1.0f - redBlend) +
-                                   BARREL_RED.g * redBlend),
-        static_cast<unsigned char>(CANNON_SECONDARY.b * (1.0f - redBlend) +
-                                   BARREL_RED.b * redBlend)));
+        static_cast<unsigned char>(Game::NEON_PURPLE.r * (1.0f - redBlend) +
+                                   Game::NEON_PINK.r * redBlend),
+        static_cast<unsigned char>(Game::NEON_PURPLE.g * (1.0f - redBlend) +
+                                   Game::NEON_PINK.g * redBlend),
+        static_cast<unsigned char>(Game::NEON_PURPLE.b * (1.0f - redBlend) +
+                                   Game::NEON_PINK.b * redBlend)));
   }
 
   window.draw(barrelRing1_);
@@ -324,16 +325,16 @@ float Cannon::mouseXToAngle(float mouseX, float windowWidth) const {
 
 void Cannon::initializeBase() {
   // Main base body (rounded rectangle shape)
-  baseBody_.setFillColor(CANNON_PRIMARY);
-  baseBody_.setOutlineColor(CANNON_OUTLINE);
+  baseBody_.setFillColor(Game::NEON_CYAN);
+  baseBody_.setOutlineColor(Game::NEON_CYAN);
   baseBody_.setOutlineThickness(2.0f);
   baseBody_.setOrigin(
       sf::Vector2f(BASE_WIDTH / 2.0f, BASE_HEIGHT)); // Origin at bottom center
   baseBody_.setPosition(position_);
 
   // Left side panel
-  baseLeftPanel_.setFillColor(CANNON_SECONDARY);
-  baseLeftPanel_.setOutlineColor(CANNON_OUTLINE);
+  baseLeftPanel_.setFillColor(Game::NEON_PURPLE);
+  baseLeftPanel_.setOutlineColor(Game::NEON_CYAN);
   baseLeftPanel_.setOutlineThickness(1.5f);
   baseLeftPanel_.setOrigin(
       sf::Vector2f(BASE_PANEL_WIDTH / 2.0f, BASE_PANEL_HEIGHT));
@@ -342,8 +343,8 @@ void Cannon::initializeBase() {
       sf::Vector2f(-BASE_WIDTH / 2.0f - BASE_PANEL_WIDTH / 2.0f, 0));
 
   // Right side panel
-  baseRightPanel_.setFillColor(CANNON_SECONDARY);
-  baseRightPanel_.setOutlineColor(CANNON_OUTLINE);
+  baseRightPanel_.setFillColor(Game::NEON_PURPLE);
+  baseRightPanel_.setOutlineColor(Game::NEON_CYAN);
   baseRightPanel_.setOutlineThickness(1.5f);
   baseRightPanel_.setOrigin(
       sf::Vector2f(BASE_PANEL_WIDTH / 2.0f, BASE_PANEL_HEIGHT));
@@ -351,8 +352,8 @@ void Cannon::initializeBase() {
       position_ + sf::Vector2f(BASE_WIDTH / 2.0f + BASE_PANEL_WIDTH / 2.0f, 0));
 
   // Front panel (at top of base)
-  baseFrontPanel_.setFillColor(CANNON_ACCENT);
-  baseFrontPanel_.setOutlineColor(CANNON_OUTLINE);
+  baseFrontPanel_.setFillColor(Game::NEON_PINK);
+  baseFrontPanel_.setOutlineColor(Game::NEON_CYAN);
   baseFrontPanel_.setOutlineThickness(1.5f);
   baseFrontPanel_.setOrigin(
       sf::Vector2f(BASE_FRONT_WIDTH / 2.0f, BASE_FRONT_HEIGHT));
@@ -360,8 +361,8 @@ void Cannon::initializeBase() {
       position_ + sf::Vector2f(0, -BASE_HEIGHT + BASE_FRONT_HEIGHT / 2.0f));
 
   // Central energy core
-  baseCore_.setFillColor(CANNON_CORE);
-  baseCore_.setOutlineColor(CANNON_OUTLINE);
+  baseCore_.setFillColor(Game::NEON_PINK);
+  baseCore_.setOutlineColor(Game::NEON_CYAN);
   baseCore_.setOutlineThickness(1.5f);
   baseCore_.setOrigin(sf::Vector2f(BASE_CORE_RADIUS, BASE_CORE_RADIUS));
   baseCore_.setPosition(position_ + sf::Vector2f(0, -BASE_HEIGHT / 2.0f));
@@ -369,41 +370,41 @@ void Cannon::initializeBase() {
 
 void Cannon::initializeBarrel() {
   // Main barrel segment
-  barrelMain_.setFillColor(CANNON_PRIMARY);
-  barrelMain_.setOutlineColor(CANNON_OUTLINE);
+  barrelMain_.setFillColor(Game::NEON_CYAN);
+  barrelMain_.setOutlineColor(Game::NEON_CYAN);
   barrelMain_.setOutlineThickness(2.0f);
   // Origin at bottom center for rotation around attachment point
   barrelMain_.setOrigin(sf::Vector2f(BARREL_LENGTH / 2.0f, BARREL_WIDTH));
 
   // Muzzle opening (wider at the end)
-  barrelMuzzle_.setFillColor(CANNON_SECONDARY);
-  barrelMuzzle_.setOutlineColor(CANNON_OUTLINE);
+  barrelMuzzle_.setFillColor(Game::NEON_PURPLE);
+  barrelMuzzle_.setOutlineColor(Game::NEON_CYAN);
   barrelMuzzle_.setOutlineThickness(2.0f);
   // Origin at left center (attaches to end of barrel)
   barrelMuzzle_.setOrigin(sf::Vector2f(0, BARREL_MUZZLE_WIDTH / 2.0f));
 
   // Energy ring 1 (near base of barrel)
   barrelRing1_.setFillColor(sf::Color::Transparent);
-  barrelRing1_.setOutlineColor(CANNON_ACCENT);
+  barrelRing1_.setOutlineColor(Game::NEON_PINK);
   barrelRing1_.setOutlineThickness(2.0f);
   barrelRing1_.setOrigin(sf::Vector2f(BARREL_RING_RADIUS, BARREL_RING_RADIUS));
 
   // Energy ring 2 (middle of barrel)
   barrelRing2_.setFillColor(sf::Color::Transparent);
-  barrelRing2_.setOutlineColor(CANNON_ACCENT);
+  barrelRing2_.setOutlineColor(Game::NEON_PINK);
   barrelRing2_.setOutlineThickness(2.0f);
   barrelRing2_.setOrigin(sf::Vector2f(BARREL_RING_RADIUS, BARREL_RING_RADIUS));
 
   // Top fin
-  barrelFin1_.setFillColor(CANNON_SECONDARY);
-  barrelFin1_.setOutlineColor(CANNON_OUTLINE);
+  barrelFin1_.setFillColor(Game::NEON_PURPLE);
+  barrelFin1_.setOutlineColor(Game::NEON_CYAN);
   barrelFin1_.setOutlineThickness(1.5f);
   barrelFin1_.setOrigin(
       sf::Vector2f(BARREL_FIN_WIDTH / 2.0f, 0)); // Origin at bottom center
 
   // Bottom fin
-  barrelFin2_.setFillColor(CANNON_SECONDARY);
-  barrelFin2_.setOutlineColor(CANNON_OUTLINE);
+  barrelFin2_.setFillColor(Game::NEON_PURPLE);
+  barrelFin2_.setOutlineColor(Game::NEON_CYAN);
   barrelFin2_.setOutlineThickness(1.5f);
   barrelFin2_.setOrigin(sf::Vector2f(
       BARREL_FIN_WIDTH / 2.0f, BARREL_FIN_LENGTH)); // Origin at top center

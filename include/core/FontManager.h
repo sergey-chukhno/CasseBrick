@@ -8,37 +8,47 @@
 /**
  * @brief Simple font manager for loading and managing fonts.
  *
- * FontManager provides a static method to get a default font.
  * For now, it tries to load a system font or creates a fallback.
  * In the future, this will be expanded to load fonts from assets.
  */
 class FontManager {
 public:
   /**
-   * @brief Gets the default font.
-   *
-   * Tries to load a system font. If that fails, returns a fallback font.
-   *
-   * @return Reference to the default font
+   * @brief Gets the default font (fallback to body font).
+   * @return Reference to the font
    */
   static const sf::Font &getDefaultFont();
 
-private:
-  static std::unique_ptr<sf::Font> defaultFont_;
-  static bool fontLoaded_;
-
   /**
-   * @brief Attempts to load a system font.
-   * @return True if font was loaded successfully, false otherwise
+   * @brief Gets the display font (Orbitron).
+   * Used for headers, titles, and important UI elements.
+   * @return Reference to the display font
    */
-  static bool loadSystemFont();
+  static const sf::Font &getDisplayFont();
 
-public:
   /**
-   * @brief Cleans up the default font.
+   * @brief Gets the body font (Rajdhani).
+   * Used for general text, descriptions, and smaller UI elements.
+   * @return Reference to the body font
+   */
+  static const sf::Font &getBodyFont();
+
+  /**
+   * @brief Cleans up the fonts.
    * Should be called before the program exits.
    */
   static void cleanup();
+
+private:
+  static std::unique_ptr<sf::Font> displayFont_;
+  static std::unique_ptr<sf::Font> bodyFont_;
+  static bool fontsLoaded_;
+
+  /**
+   * @brief Attempts to load fonts from assets.
+   * @return True if fonts were loaded successfully
+   */
+  static bool loadFonts();
 };
 
 #endif // FONTMANAGER_H

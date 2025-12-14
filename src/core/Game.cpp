@@ -4,6 +4,13 @@
 #include "core/states/MenuState.h"
 #include <iostream>
 
+// Initialize Cyberpunk Color Palette
+const sf::Color Game::NEON_PINK(255, 0, 110);
+const sf::Color Game::NEON_CYAN(0, 217, 255);
+const sf::Color Game::NEON_PURPLE(157, 78, 221);
+const sf::Color Game::NEON_GREEN(6, 255, 165);
+const sf::Color Game::BG_DARK(10, 10, 26);
+
 Game::Game()
     : window_(sf::VideoMode(sf::Vector2u(WINDOW_WIDTH, WINDOW_HEIGHT)),
               WINDOW_TITLE),
@@ -12,7 +19,7 @@ Game::Game()
       fadeSpeed_(FADE_SPEED), isFading_(true),
       fadeDirection_(true) // Fade in (black to transparent)
       ,
-      soundButtonText_(FontManager::getDefaultFont()) {
+      soundButtonText_(FontManager::getBodyFont()) {
   window_.setFramerateLimit(60);
 
   // Initialize fade overlay
@@ -196,7 +203,7 @@ void Game::startFade(bool fadeIn) {
 }
 
 void Game::render() {
-  window_.clear(sf::Color(10, 10, 26)); // Cyberpunk background color (#0a0a1a)
+  window_.clear(BG_DARK); // Cyberpunk background color
 
   if (!stateStack_.empty()) {
     stateStack_.back()->render(window_);
@@ -218,15 +225,15 @@ void Game::render() {
 }
 void Game::initializeSoundButton() {
   // Button background
-  soundButton_.setSize(sf::Vector2f(120.0f, 40.0f));
-  soundButton_.setPosition(sf::Vector2f(WINDOW_WIDTH - 140.0f, 80.0f));
+  soundButton_.setSize(sf::Vector2f(140.0f, 40.0f));
+  soundButton_.setPosition(sf::Vector2f(WINDOW_WIDTH - 160.0f, 80.0f));
   soundButton_.setFillColor(sf::Color::Transparent);
   soundButton_.setOutlineThickness(2.0f);
 
   // Button text
-  soundButtonText_.setFont(FontManager::getDefaultFont());
-  soundButtonText_.setCharacterSize(16);
-  soundButtonText_.setPosition(sf::Vector2f(WINDOW_WIDTH - 130.0f, 30.0f));
+  soundButtonText_.setFont(FontManager::getDisplayFont());
+  soundButtonText_.setCharacterSize(14);
+  soundButtonText_.setPosition(sf::Vector2f(WINDOW_WIDTH - 150.0f, 30.0f));
 
   updateSoundButton();
 }
@@ -235,13 +242,13 @@ void Game::updateSoundButton() {
   bool enabled = AudioManager::getInstance().isAudioEnabled();
 
   if (enabled) {
-    soundButtonText_.setString("SOUND ON");
-    soundButtonText_.setFillColor(sf::Color(0, 255, 100)); // Neon Green
-    soundButton_.setOutlineColor(sf::Color(0, 255, 100));
+    soundButtonText_.setString("SOUND: ON");
+    soundButtonText_.setFillColor(NEON_GREEN);
+    soundButton_.setOutlineColor(NEON_GREEN);
   } else {
-    soundButtonText_.setString("SOUND OFF");
-    soundButtonText_.setFillColor(sf::Color(255, 0, 100)); // Neon Pink
-    soundButton_.setOutlineColor(sf::Color(255, 0, 100));
+    soundButtonText_.setString("SOUND: OFF");
+    soundButtonText_.setFillColor(NEON_PINK);
+    soundButton_.setOutlineColor(NEON_PINK);
   }
 
   // Center text in button
