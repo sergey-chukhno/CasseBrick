@@ -26,6 +26,7 @@ set(SOURCES
     src/main.cpp
     src/core/GameState.cpp
     src/core/Game.cpp
+    src/core/AudioManager.cpp
     src/core/FontManager.cpp
     src/ui/Button.cpp
     src/ui/Starfield.cpp
