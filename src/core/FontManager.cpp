@@ -1,55 +1,59 @@
 #include "core/FontManager.h"
 #include <iostream>
 
-std::unique_ptr<sf::Font> FontManager::defaultFont_ = nullptr;
-bool FontManager::fontLoaded_ = false;
+std::unique_ptr<sf::Font> FontManager::displayFont_ = nullptr;
+std::unique_ptr<sf::Font> FontManager::bodyFont_ = nullptr;
+bool FontManager::fontsLoaded_ = false;
 
-const sf::Font &FontManager::getDefaultFont() {
-  if (!fontLoaded_) {
-    defaultFont_ = std::make_unique<sf::Font>();
+const sf::Font &FontManager::getDefaultFont() { return getBodyFont(); }
 
-    // Try to load a system font
-    // Common system font paths on macOS
-    const std::vector<std::string> systemFontPaths = {
-        "/System/Library/Fonts/Helvetica.ttc",
-        "/System/Library/Fonts/SFNSDisplay.ttf",
-        "/Library/Fonts/Arial.ttf",
-        "/System/Library/Fonts/Supplemental/Arial.ttf",
-    };
-
-    bool loaded = false;
-    for (const auto &path : systemFontPaths) {
-      if (defaultFont_->openFromFile(path)) {
-        loaded = true;
-        std::cout << "Loaded font from: " << path << std::endl;
-        break;
-      }
-    }
-
-    if (!loaded) {
-      // If no system font found, we'll use SFML's default font handling
-      // For now, we'll create an empty font and handle it gracefully
-      std::cerr << "Warning: Could not load system font. Text may not render "
-                   "correctly."
-                << std::endl;
-      // Note: In SFML 3.0, we might need to handle this differently
-      // For now, we'll proceed and handle font loading errors in the states
-    }
-
-    fontLoaded_ = true;
+const sf::Font &FontManager::getDisplayFont() {
+  if (!fontsLoaded_) {
+    loadFonts();
   }
-
-  return *defaultFont_;
+  return *displayFont_;
 }
 
-bool FontManager::loadSystemFont() {
-  // This is called from getDefaultFont()
-  return fontLoaded_;
+const sf::Font &FontManager::getBodyFont() {
+  if (!fontsLoaded_) {
+    loadFonts();
+  }
+  return *bodyFont_;
+}
+
+bool FontManager::loadFonts() {
+  if (fontsLoaded_)
+    return true;
+
+  displayFont_ = std::make_unique<sf::Font>();
+  bodyFont_ = std::make_unique<sf::Font>();
+
+  bool displayLoaded =
+      displayFont_->openFromFile("assets/fonts/Orbitron-Bold.ttf");
+  bool bodyLoaded =
+      bodyFont_->openFromFile("assets/fonts/Rajdhani-Regular.ttf");
+
+  if (displayLoaded) {
+    std::cout << "Loaded Display font: Orbitron-Bold.ttf" << std::endl;
+  } else {
+    std::cerr << "Failed to load Display font: Orbitron-Bold.ttf" << std::endl;
+    // Fallback to system font if possible, or empty font
+  }
+
+  if (bodyLoaded) {
+    std::cout << "Loaded Body font: Rajdhani-Regular.ttf" << std::endl;
+  } else {
+    std::cerr << "Failed to load Body font: Rajdhani-Regular.ttf" << std::endl;
+  }
+
+  fontsLoaded_ = true;
+  return displayLoaded && bodyLoaded;
 }
 
 void FontManager::cleanup() {
-  if (fontLoaded_) {
-    defaultFont_.reset();
-    fontLoaded_ = false;
+  if (fontsLoaded_) {
+    displayFont_.reset();
+    bodyFont_.reset();
+    fontsLoaded_ = false;
   }
 }

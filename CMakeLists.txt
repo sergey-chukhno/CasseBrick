@@ -59,14 +59,13 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 # Copy assets to build directory (for development)
-# Note: This will be enabled when we have actual assets to copy
-# For now, we'll skip this since directories are empty
-# if(EXISTS ${CMAKE_SOURCE_DIR}/assets)
-#     file(COPY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
-# endif()
-# if(EXISTS ${CMAKE_SOURCE_DIR}/config)
-#     file(COPY ${CMAKE_SOURCE_DIR}/config DESTINATION ${CMAKE_BINARY_DIR})
-# endif()
+# Copy to bin directory where executable is located
+if(EXISTS ${CMAKE_SOURCE_DIR}/assets)
+    file(COPY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+endif()
+if(EXISTS ${CMAKE_SOURCE_DIR}/config)
+    file(COPY ${CMAKE_SOURCE_DIR}/config DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+endif()
 
 # Compiler-specific options
 if(MSVC)
