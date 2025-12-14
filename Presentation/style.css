@@ -103,6 +103,26 @@ body {
     box-shadow: 0 0 20px var(--neon-cyan);
 }
 
+.cyber-btn.small {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border-color: var(--neon-pink);
+    color: var(--neon-pink);
+}
+
+.cyber-btn.small:hover {
+    background: var(--neon-pink);
+    color: var(--bg-dark);
+    box-shadow: 0 0 20px var(--neon-pink);
+}
+
+.audio-control {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    z-index: 100;
+}
+
 .slide-indicator {
     font-family: var(--font-display);
     font-size: 1.2rem;
@@ -421,4 +441,119 @@ body {
 .diagram-image-container a:hover {
     transform: scale(1.02);
     cursor: zoom-in;
+}
+
+/* Slide 7: Game Over */
+/* Slide 7: Game Over */
+.game-over-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+}
+
+.game-screenshot-frame {
+    width: 600px;
+    height: 350px;
+    border: 4px solid var(--neon-pink);
+    box-shadow: 0 0 30px var(--neon-pink);
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    transform: perspective(1000px) rotateX(10deg);
+    transition: transform 0.3s ease;
+}
+
+.game-screenshot-frame.large {
+    width: 900px;
+    /* Increased size */
+    height: 500px;
+    /* Increased size */
+}
+
+.game-screenshot-frame:hover {
+    transform: perspective(1000px) rotateX(0deg) scale(1.02);
+}
+
+.game-screenshot-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.scanline-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.2));
+    background-size: 100% 4px;
+    pointer-events: none;
+}
+
+.game-over-text {
+    font-family: var(--font-display);
+    font-size: 6rem;
+    color: var(--neon-pink);
+    text-shadow: 4px 4px var(--neon-cyan);
+    margin-bottom: 1rem;
+    animation: glitch 1s infinite;
+    position: relative;
+}
+
+.thank-you-text {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    color: var(--neon-cyan);
+    letter-spacing: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.restart-prompt {
+    font-family: 'Courier New', monospace;
+    font-size: 1.5rem;
+    color: white;
+    animation: blink 1s infinite;
+}
+
+@keyframes glitch {
+    0% {
+        transform: translate(0)
+    }
+
+    20% {
+        transform: translate(-2px, 2px)
+    }
+
+    40% {
+        transform: translate(-2px, -2px)
+    }
+
+    60% {
+        transform: translate(2px, 2px)
+    }
+
+    80% {
+        transform: translate(2px, -2px)
+    }
+
+    100% {
+        transform: translate(0)
+    }
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
 }

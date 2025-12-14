@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize Mermaid
-    mermaid.initialize({ 
+    mermaid.initialize({
         startOnLoad: true,
         theme: 'dark',
         themeVariables: {
@@ -10,6 +10,28 @@ document.addEventListener('DOMContentLoaded', () => {
             lineColor: '#ff006e',
             secondaryColor: '#006100',
             tertiaryColor: '#fff'
+        }
+    });
+
+    // Audio Logic
+    const audioBtn = document.getElementById('audioBtn');
+    const bgMusic = document.getElementById('bgMusic');
+    let isPlaying = false;
+
+    audioBtn.addEventListener('click', () => {
+        if (isPlaying) {
+            bgMusic.pause();
+            audioBtn.textContent = 'SOUND OFF';
+            audioBtn.style.borderColor = 'var(--neon-pink)';
+            audioBtn.style.color = 'var(--neon-pink)';
+            isPlaying = false;
+        } else {
+            bgMusic.play().then(() => {
+                audioBtn.textContent = 'SOUND ON';
+                audioBtn.style.borderColor = 'var(--neon-green)';
+                audioBtn.style.color = 'var(--neon-green)';
+                isPlaying = true;
+            }).catch(e => console.error("Audio play failed:", e));
         }
     });
 

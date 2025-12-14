@@ -24,6 +24,14 @@
             <button id="nextBtn" class="cyber-btn">NEXT &gt;</button>
         </div>
 
+        <!-- Audio Control -->
+        <div class="audio-control">
+            <button id="audioBtn" class="cyber-btn small">SOUND OFF</button>
+        </div>
+        <audio id="bgMusic" loop>
+            <source src="assets/audio/cyberpunk_theme.wav" type="audio/wav">
+        </audio>
+
         <!-- Slide 1: Title -->
         <div class="slide active" id="slide-1">
             <div class="content-center">
@@ -191,9 +199,23 @@ if (auto* state = getCurrentState()) {
             </div>
         </div>
 
+        <!-- Slide 7: Game Over -->
+        <div class="slide" id="slide-7">
+            <div class="game-over-container">
+                <div class="game-screenshot-frame large">
+                    <img src="assets/images/gameplay_mockup.png" alt="Gameplay Screenshot">
+                    <div class="scanline-overlay"></div>
+                </div>
+                <h1 class="game-over-text" data-text="GAME OVER">GAME OVER</h1>
+                <h2 class="thank-you-text">THANK YOU FOR PLAYING</h2>
+                <div class="restart-prompt">PRESS START TO REPLAY</div>
+            </div>
+        </div>
+
     </div>
 
     <script src="script.js"></script>
 </body>
 
 </html>
+```
