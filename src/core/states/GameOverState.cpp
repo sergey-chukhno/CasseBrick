@@ -21,7 +21,8 @@ GameOverState::GameOverState(Game *game, int score, int level,
                              int bricksDestroyed)
     : game_(game), score_(score), level_(level),
       bricksDestroyed_(bricksDestroyed), font_(FontManager::getBodyFont()),
-      titleText_(FontManager::getDisplayFont(), "GAME OVER", 64),
+      displayFont_(FontManager::getDisplayFont()),
+      titleText_(displayFont_, "GAME OVER", 64),
       scoreText_(font_, "",
                  36) // Initialize with empty string, will set in initializeUI
       ,
@@ -122,7 +123,7 @@ void GameOverState::initializeUI() {
 
     // Create button text
     // SFML 3.0: Text requires font in constructor
-    sf::Text text(font_, buttonLabels_[i], 24);
+    sf::Text text(displayFont_, buttonLabels_[i], 24);
     text.setFillColor(TEXT_COLOR);
     text.setStyle(sf::Text::Bold);
 

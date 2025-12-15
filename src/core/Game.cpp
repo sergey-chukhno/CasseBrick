@@ -224,16 +224,15 @@ void Game::render() {
   window_.display();
 }
 void Game::initializeSoundButton() {
-  // Button background
-  soundButton_.setSize(sf::Vector2f(140.0f, 40.0f));
-  soundButton_.setPosition(sf::Vector2f(WINDOW_WIDTH - 160.0f, 80.0f));
-  soundButton_.setFillColor(sf::Color::Transparent);
-  soundButton_.setOutlineThickness(2.0f);
+  // Button background - small button in top-right corner
+  soundButton_.setSize(sf::Vector2f(100.0f, 32.0f));
+  soundButton_.setPosition(sf::Vector2f(WINDOW_WIDTH - 120.0f, 80.0f));
+  soundButton_.setFillColor(sf::Color(10, 10, 26, 200)); // Dark fill
+  soundButton_.setOutlineThickness(1.5f);
 
   // Button text
   soundButtonText_.setFont(FontManager::getDisplayFont());
   soundButtonText_.setCharacterSize(14);
-  soundButtonText_.setPosition(sf::Vector2f(WINDOW_WIDTH - 150.0f, 30.0f));
 
   updateSoundButton();
 }
@@ -242,11 +241,11 @@ void Game::updateSoundButton() {
   bool enabled = AudioManager::getInstance().isAudioEnabled();
 
   if (enabled) {
-    soundButtonText_.setString("SOUND: ON");
-    soundButtonText_.setFillColor(NEON_GREEN);
-    soundButton_.setOutlineColor(NEON_GREEN);
+    soundButtonText_.setString("SOUND ON");
+    soundButtonText_.setFillColor(NEON_CYAN);
+    soundButton_.setOutlineColor(NEON_CYAN);
   } else {
-    soundButtonText_.setString("SOUND: OFF");
+    soundButtonText_.setString("SOUND OFF");
     soundButtonText_.setFillColor(NEON_PINK);
     soundButton_.setOutlineColor(NEON_PINK);
   }
@@ -259,7 +258,7 @@ void Game::updateSoundButton() {
   soundButtonText_.setPosition(
       sf::Vector2f(btnPos.x + (btnSize.x - textBounds.size.x) / 2.0f,
                    btnPos.y + (btnSize.y - textBounds.size.y) / 2.0f -
-                       4.0f // Adjust for baseline
+                       3.0f // Adjust for baseline
                    ));
 }
 

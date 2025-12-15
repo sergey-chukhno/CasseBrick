@@ -82,3 +82,11 @@ bool AudioManager::toggleAudio() {
 }
 
 bool AudioManager::isAudioEnabled() const { return audioEnabled_; }
+
+void AudioManager::setGlobalVolume(float volume) {
+  sf::Listener::setGlobalVolume(volume);
+}
+
+float AudioManager::getGlobalVolume() const {
+  return sf::Listener::getGlobalVolume();
+}

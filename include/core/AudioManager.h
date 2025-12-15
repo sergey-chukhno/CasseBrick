@@ -67,6 +67,18 @@ public:
    */
   bool isAudioEnabled() const;
 
+  /**
+   * @brief Sets the global volume (0-100).
+   * @param volume Volume level
+   */
+  void setGlobalVolume(float volume);
+
+  /**
+   * @brief Gets the global volume (0-100).
+   * @return Volume level
+   */
+  float getGlobalVolume() const;
+
 private:
   AudioManager();
   ~AudioManager() = default;

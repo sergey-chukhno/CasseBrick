@@ -47,6 +47,7 @@ private:
 
   // UI elements
   const sf::Font &font_; // Reference to font from FontManager
+  const sf::Font &displayFont_;
   sf::Text titleText_;
   sf::Text scoreText_;
   sf::Text levelText_;
