@@ -63,7 +63,7 @@ void MenuState::initializeUI() {
     float buttonY = startY + i * (BUTTON_HEIGHT + BUTTON_SPACING);
 
     auto button = std::make_unique<Button>(
-        bodyFont, buttonLabels_[i], sf::Vector2f(centerX, buttonY),
+        displayFont, buttonLabels_[i], sf::Vector2f(centerX, buttonY),
         sf::Vector2f(BUTTON_WIDTH, BUTTON_HEIGHT));
 
     button->setColors(getButtonFillColor(), getButtonOutlineColor(),
