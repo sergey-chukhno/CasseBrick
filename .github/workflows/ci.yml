@@ -15,12 +15,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Install clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format
+
       - name: Style Check (clang-format)
-        uses: JeSardagna/clang-format-action@v2.3.0
-        with:
-          clang-format-version: '15'
-          style: 'Google'
-          sources: 'src/**/*.cpp,include/**/*.h,tests/**/*.cpp'
+        run: |
+          find src/ include/ tests/ -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" \) | xargs clang-format --dry-run --Werror
 
   # Job 2: Build & Test on Linux, macOS, and Windows
   build-and-test:
