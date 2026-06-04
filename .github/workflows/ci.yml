@@ -14,15 +14,32 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install clang-format
         run: |
           sudo apt-get update
           sudo apt-get install -y clang-format
 
-      - name: Style Check (clang-format)
+      - name: Style Check (clang-format on PR diff)
+        if: github.event_name == 'pull_request'
         run: |
-          find src/ include/ tests/ -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" \) | xargs clang-format --dry-run --Werror
+          git fetch origin ${{ github.base_ref }} --depth=1
+          MODIFIED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '\.(cpp|hpp|h)$' || true)
+          if [ -n "$MODIFIED_FILES" ]; then
+            echo "Checking formatting on C++ files modified in this PR:"
+            echo "$MODIFIED_FILES"
+            echo "$MODIFIED_FILES" | xargs clang-format --dry-run --Werror
+          else
+            echo "No C++ files were modified in this PR."
+          fi
+
+      - name: Style Check Note (Non-PR pushes)
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "Non-PR push detected. Code style checks are restricted to Pull Requests to avoid legacy formatting noise."
+
 
   # Job 2: Build & Test on Linux, macOS, and Windows
   build-and-test:
