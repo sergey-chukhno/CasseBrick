@@ -102,7 +102,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/sfml-install
-          key: ${{ runner.os }}-sfml-v3.0.0
+          key: ${{ runner.os }}-sfml-v3.0.0-shared
 
       # Build SFML 3 from source if not found in cache
       - name: Build SFML 3.0.0 from Source
@@ -113,6 +113,7 @@ jobs:
           cmake -S sfml-src -B sfml-build \
             -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/sfml-install \
             -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=ON \
             -DSFML_BUILD_EXAMPLES=OFF \
             -DSFML_BUILD_TESTS=OFF
           cmake --build sfml-build --config Release --target install
