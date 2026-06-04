@@ -72,6 +72,8 @@ jobs:
           sudo apt-get install -y \
             libxrandr-dev \
             libxcursor-dev \
+            libxi-dev \
+            libxinerama-dev \
             libudev-dev \
             libopenal-dev \
             libflac-dev \
@@ -83,6 +85,7 @@ jobs:
             libxcb-image0-dev \
             libxss-dev \
             clang-tidy
+
 
       # Set up compilers (Windows and macOS have defaults; Linux needs GCC/Clang setup)
       - name: Setup GCC/Clang on Linux
