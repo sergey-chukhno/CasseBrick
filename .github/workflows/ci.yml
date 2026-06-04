@@ -1,0 +1,126 @@
+name: Cyberpunk Cannon Shooter CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Job 1: Verification of code style and formatting
+  formatting:
+    name: Code Formatting Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Style Check (clang-format)
+        uses: JeSardagna/clang-format-action@v2.3.0
+        with:
+          clang-format-version: '15'
+          style: 'Google'
+          sources: 'src/**/*.cpp,include/**/*.h,tests/**/*.cpp'
+
+  # Job 2: Build & Test on Linux, macOS, and Windows
+  build-and-test:
+    name: Build & Test (${{ matrix.os }})
+    needs: formatting
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            cmake-preset: linux
+          - os: macos-latest
+            cmake-preset: macos
+          - os: windows-latest
+            cmake-preset: windows
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # Install system dependencies needed for compiling SFML on Linux
+      - name: Install Linux Dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libxrandr-dev \
+            libxcursor-dev \
+            libudev-dev \
+            libopenal-dev \
+            libflac-dev \
+            libvorbis-dev \
+            libgl1-mesa-dev \
+            libegl1-mesa-dev \
+            libx11-xcb-dev \
+            libxcb-randr0-dev \
+            libxcb-image0-dev \
+            libxss-dev \
+            clang-tidy
+
+      # Set up compilers (Windows and macOS have defaults; Linux needs GCC/Clang setup)
+      - name: Setup GCC/Clang on Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "CXX=clang++" >> $GITHUB_ENV
+
+      # Cache SFML 3 build to prevent rebuilding on every commit
+      - name: Cache SFML 3
+        id: cache-sfml
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/sfml-install
+          key: ${{ runner.os }}-sfml-v3.0.0
+
+      # Build SFML 3 from source if not found in cache
+      - name: Build SFML 3.0.0 from Source
+        if: steps.cache-sfml.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          git clone --branch 3.0.0 https://github.com/SFML/SFML.git sfml-src
+          cmake -S sfml-src -B sfml-build \
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/sfml-install \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DSFML_BUILD_EXAMPLES=OFF \
+            -DSFML_BUILD_TESTS=OFF
+          cmake --build sfml-build --config Release --target install
+
+      # Setup build environment
+      - name: Configure CMake
+        shell: bash
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/sfml-install \
+            -DENABLE_TESTING=ON
+
+      # Build our game target. Warnings are treated as compilation failures.
+      - name: Build Executable
+        shell: bash
+        run: |
+          cmake --build build --config Release
+
+      # Run test targets
+      - name: Run Automated Tests
+        shell: bash
+        run: |
+          cd build
+          ctest --output-on-failure -C Release
+
+      # Static Analysis Check (Only on Linux runner to avoid multiple analyses)
+      - name: Run Clang-Tidy (Linux only)
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          # Generate compilation database for clang-tidy
+          cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/sfml-install
+          # Run analysis on all main cpp files
+          clang-tidy -p build src/core/*.cpp src/entities/*.cpp src/managers/*.cpp src/ui/*.cpp src/main.cpp --extra-arg=-std=c++17
