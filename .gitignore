@@ -3,11 +3,16 @@
 # ============================================
 # Documentation and Project-Specific Files
 # ============================================
-docs/
 .cursorrules
+
+# Internal files not exposed on GitHub
+RULES.md
+ROADMAP_FORWARD.md
+DEV-LOG.md
 
 # But keep ROADMAP.md in root directory (it's tracked)
 !ROADMAP.md
+
 
 # ============================================
 # Build Directories

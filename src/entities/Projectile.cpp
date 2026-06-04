@@ -1,18 +1,22 @@
 #include "entities/Projectile.h"
+
 #include <algorithm>
 #include <cmath>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 // ============================================================================
 // Projectile Implementation
 // ============================================================================
 
 Projectile::Projectile()
-    : position_(0.0f, 0.0f)
-    , velocity_(0.0f, 0.0f)
-    , isActive_(false)
-    , shape_(PROJECTILE_RADIUS)
-    , trailUpdateTimer_(0.0f)
-{
+    : position_(0.0f, 0.0f),
+      velocity_(0.0f, 0.0f),
+      isActive_(false),
+      shape_(PROJECTILE_RADIUS),
+      trailUpdateTimer_(0.0f) {
     shape_.setFillColor(PROJECTILE_COLOR);
     shape_.setOutlineColor(sf::Color(255, 255, 255, 200));
     shape_.setOutlineThickness(1.0f);
@@ -20,28 +24,26 @@ Projectile::Projectile()
     shape_.setPosition(position_);
 }
 
-void Projectile::activate(const sf::Vector2f& position, const sf::Vector2f& velocity)
-{
+void Projectile::activate(const sf::Vector2f& position, const sf::Vector2f& velocity) {
     position_ = position;
     velocity_ = velocity;
     isActive_ = true;
     trailPoints_.clear();
     trailUpdateTimer_ = 0.0f;
-    
+
     // Add initial trail point
     trailPoints_.push_back({position_, 1.0f, 0.0f});
-    
+
     shape_.setPosition(position_);
 }
 
-void Projectile::deactivate()
-{
+void Projectile::deactivate() {
     isActive_ = false;
     trailPoints_.clear();
 }
 
-void Projectile::update(float deltaTime, const sf::Vector2u& windowSize, const sf::FloatRect& cannonBounds)
-{
+void Projectile::update(float deltaTime, const sf::Vector2u& windowSize,
+                        const sf::FloatRect& cannonBounds) {
     if (!isActive_) {
         return;
     }
@@ -64,18 +66,17 @@ void Projectile::update(float deltaTime, const sf::Vector2u& windowSize, const s
     updateTrail(deltaTime);
 }
 
-void Projectile::updateTrail(float deltaTime)
-{
+void Projectile::updateTrail(float deltaTime) {
     // Update trail timer
     trailUpdateTimer_ += deltaTime;
 
     // Add new trail point periodically
     if (trailUpdateTimer_ >= TRAIL_UPDATE_INTERVAL) {
         trailUpdateTimer_ = 0.0f;
-        
+
         // Add new trail point
         trailPoints_.push_back({position_, 1.0f, 0.0f});
-        
+
         // Limit trail points
         if (trailPoints_.size() > MAX_TRAIL_POINTS) {
             trailPoints_.pop_front();
@@ -89,18 +90,12 @@ void Projectile::updateTrail(float deltaTime)
     }
 
     // Remove expired trail points
-    trailPoints_.erase(
-        std::remove_if(
-            trailPoints_.begin(),
-            trailPoints_.end(),
-            [](const TrailPoint& point) { return point.alpha <= 0.0f; }
-        ),
-        trailPoints_.end()
-    );
+    trailPoints_.erase(std::remove_if(trailPoints_.begin(), trailPoints_.end(),
+                                      [](const TrailPoint& point) { return point.alpha <= 0.0f; }),
+                       trailPoints_.end());
 }
 
-void Projectile::checkWallCollisions(const sf::Vector2u& windowSize)
-{
+void Projectile::checkWallCollisions(const sf::Vector2u& windowSize) {
     // Left wall
     if (position_.x - PROJECTILE_RADIUS < 0) {
         position_.x = PROJECTILE_RADIUS + COLLISION_OFFSET;
@@ -120,15 +115,15 @@ void Projectile::checkWallCollisions(const sf::Vector2u& windowSize)
     }
 }
 
-void Projectile::checkCannonCollision(const sf::FloatRect& cannonBounds)
-{
+void Projectile::checkCannonCollision(const sf::FloatRect& cannonBounds) {
     sf::FloatRect projectileBounds = getBounds();
 
     // Manual AABB intersection check (SFML 3.0 doesn't have intersects() method)
-    bool intersects = (projectileBounds.position.x < cannonBounds.position.x + cannonBounds.size.x &&
-                       projectileBounds.position.x + projectileBounds.size.x > cannonBounds.position.x &&
-                       projectileBounds.position.y < cannonBounds.position.y + cannonBounds.size.y &&
-                       projectileBounds.position.y + projectileBounds.size.y > cannonBounds.position.y);
+    bool intersects =
+        (projectileBounds.position.x < cannonBounds.position.x + cannonBounds.size.x &&
+         projectileBounds.position.x + projectileBounds.size.x > cannonBounds.position.x &&
+         projectileBounds.position.y < cannonBounds.position.y + cannonBounds.size.y &&
+         projectileBounds.position.y + projectileBounds.size.y > cannonBounds.position.y);
 
     if (intersects) {
         // Simple bounce: always bounce upward
@@ -140,8 +135,7 @@ void Projectile::checkCannonCollision(const sf::FloatRect& cannonBounds)
     }
 }
 
-void Projectile::render(sf::RenderWindow& window) const
-{
+void Projectile::render(sf::RenderWindow& window) const {
     if (!isActive_) {
         return;
     }
@@ -156,8 +150,7 @@ void Projectile::render(sf::RenderWindow& window) const
     window.draw(shape_);
 }
 
-void Projectile::renderGlow(sf::RenderWindow& window) const
-{
+void Projectile::renderGlow(sf::RenderWindow& window) const {
     // Render multiple glow layers with decreasing opacity
     for (int i = 0; i < GLOW_LAYERS; ++i) {
         float scale = 1.0f + (static_cast<float>(i + 1) * 0.08f);
@@ -166,15 +159,15 @@ void Projectile::renderGlow(sf::RenderWindow& window) const
         sf::CircleShape glow(PROJECTILE_RADIUS * scale);
         glow.setOrigin(sf::Vector2f(PROJECTILE_RADIUS * scale, PROJECTILE_RADIUS * scale));
         glow.setPosition(position_);
-        glow.setFillColor(sf::Color(PROJECTILE_COLOR.r, PROJECTILE_COLOR.g, PROJECTILE_COLOR.b, alpha));
+        glow.setFillColor(
+            sf::Color(PROJECTILE_COLOR.r, PROJECTILE_COLOR.g, PROJECTILE_COLOR.b, alpha));
         glow.setOutlineThickness(0.0f);
 
         window.draw(glow);
     }
 }
 
-void Projectile::renderTrail(sf::RenderWindow& window) const
-{
+void Projectile::renderTrail(sf::RenderWindow& window) const {
     if (trailPoints_.size() < 2) {
         return;
     }
@@ -202,44 +195,30 @@ void Projectile::renderTrail(sf::RenderWindow& window) const
 
             // Set color with alpha
             unsigned char alpha = static_cast<unsigned char>(255 * point1.alpha);
-            line.setFillColor(sf::Color(PROJECTILE_COLOR.r, PROJECTILE_COLOR.g, PROJECTILE_COLOR.b, alpha));
+            line.setFillColor(
+                sf::Color(PROJECTILE_COLOR.r, PROJECTILE_COLOR.g, PROJECTILE_COLOR.b, alpha));
 
             window.draw(line);
         }
     }
 }
 
-sf::Vector2f Projectile::getPosition() const
-{
-    return position_;
-}
+sf::Vector2f Projectile::getPosition() const { return position_; }
 
-sf::Vector2f Projectile::getVelocity() const
-{
-    return velocity_;
-}
+sf::Vector2f Projectile::getVelocity() const { return velocity_; }
 
-sf::FloatRect Projectile::getBounds() const
-{
+sf::FloatRect Projectile::getBounds() const {
     // SFML 3.0: FloatRect constructor takes position (Vector2f) and size (Vector2f)
     return sf::FloatRect(
         sf::Vector2f(position_.x - PROJECTILE_RADIUS, position_.y - PROJECTILE_RADIUS),
-        sf::Vector2f(PROJECTILE_RADIUS * 2.0f, PROJECTILE_RADIUS * 2.0f)
-    );
+        sf::Vector2f(PROJECTILE_RADIUS * 2.0f, PROJECTILE_RADIUS * 2.0f));
 }
 
-bool Projectile::isActive() const
-{
-    return isActive_;
-}
+bool Projectile::isActive() const { return isActive_; }
 
-void Projectile::setVelocity(const sf::Vector2f& velocity)
-{
-    velocity_ = velocity;
-}
+void Projectile::setVelocity(const sf::Vector2f& velocity) { velocity_ = velocity; }
 
-void Projectile::setPosition(const sf::Vector2f& position)
-{
+void Projectile::setPosition(const sf::Vector2f& position) {
     position_ = position;
     shape_.setPosition(position_);
 }
@@ -248,14 +227,9 @@ void Projectile::setPosition(const sf::Vector2f& position)
 // ProjectilePool Implementation
 // ============================================================================
 
-ProjectilePool::ProjectilePool(size_t poolSize)
-    : pool_(poolSize)
-    , activeCount_(0)
-{
-}
+ProjectilePool::ProjectilePool(size_t poolSize) : pool_(poolSize), activeCount_(0) {}
 
-Projectile* ProjectilePool::acquire(const sf::Vector2f& position, const sf::Vector2f& velocity)
-{
+Projectile* ProjectilePool::acquire(const sf::Vector2f& position, const sf::Vector2f& velocity) {
     // Find first inactive projectile
     for (auto& projectile : pool_) {
         if (!projectile.isActive()) {
@@ -269,8 +243,8 @@ Projectile* ProjectilePool::acquire(const sf::Vector2f& position, const sf::Vect
     return nullptr;
 }
 
-void ProjectilePool::updateAll(float deltaTime, const sf::Vector2u& windowSize, const sf::FloatRect& cannonBounds)
-{
+void ProjectilePool::updateAll(float deltaTime, const sf::Vector2u& windowSize,
+                               const sf::FloatRect& cannonBounds) {
     activeCount_ = 0;
     for (auto& projectile : pool_) {
         if (projectile.isActive()) {
@@ -282,8 +256,7 @@ void ProjectilePool::updateAll(float deltaTime, const sf::Vector2u& windowSize, 
     }
 }
 
-void ProjectilePool::renderAll(sf::RenderWindow& window) const
-{
+void ProjectilePool::renderAll(sf::RenderWindow& window) const {
     for (const auto& projectile : pool_) {
         if (projectile.isActive()) {
             projectile.render(window);
@@ -291,13 +264,9 @@ void ProjectilePool::renderAll(sf::RenderWindow& window) const
     }
 }
 
-size_t ProjectilePool::getActiveCount() const
-{
-    return activeCount_;
-}
+size_t ProjectilePool::getActiveCount() const { return activeCount_; }
 
-std::vector<Projectile*> ProjectilePool::getActiveProjectiles()
-{
+std::vector<Projectile*> ProjectilePool::getActiveProjectiles() {
     std::vector<Projectile*> activeProjectiles;
     for (auto& projectile : pool_) {
         if (projectile.isActive()) {
@@ -307,8 +276,7 @@ std::vector<Projectile*> ProjectilePool::getActiveProjectiles()
     return activeProjectiles;
 }
 
-std::vector<const Projectile*> ProjectilePool::getActiveProjectiles() const
-{
+std::vector<const Projectile*> ProjectilePool::getActiveProjectiles() const {
     std::vector<const Projectile*> activeProjectiles;
     for (const auto& projectile : pool_) {
         if (projectile.isActive()) {
@@ -318,8 +286,7 @@ std::vector<const Projectile*> ProjectilePool::getActiveProjectiles() const
     return activeProjectiles;
 }
 
-void ProjectilePool::clear()
-{
+void ProjectilePool::clear() {
     for (auto& projectile : pool_) {
         if (projectile.isActive()) {
             projectile.deactivate();
@@ -327,4 +294,3 @@ void ProjectilePool::clear()
     }
     activeCount_ = 0;
 }
-
