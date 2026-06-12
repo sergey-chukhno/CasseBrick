@@ -33,9 +33,14 @@ The **Art Baseline** serves as the practical bridge between high-level visual st
 
 The Golden Screenshot represents the absolute target visual composition of the game during active gameplay. All screen rendering must conform to the geometry, hierarchy, and lighting shown here.
 
-### Playfield Dimensions
-*   **Active Canvas**: $1920\text{px} \times 1080\text{px}$ (16:9 Aspect Ratio).
-*   **Gameplay Bounds**: $1200\text{px} \times 1000\text{px}$ (centered horizontally, $y$-offset from top: $40\text{px}$).
+### Playfield Dimensions & Coordinates
+*   **Active Canvas Size**: $1920\text{px} \times 1080\text{px}$ (16:9 Aspect Ratio).
+*   **Gameplay Area Bounds**: $1200\text{px} \times 1000\text{px}$ (centered horizontally).
+*   **Left Boundary Coordinate**: $X = 360\text{px}$.
+*   **Right Boundary Coordinate**: $X = 1560\text{px}$.
+*   **Center X Coordinate**: $X = 960\text{px}$.
+*   **Top Boundary Coordinate**: $Y = 40\text{px}$.
+*   **Bottom Boundary Coordinate**: $Y = 1040\text{px}$.
 
 ### Annotated Composition Wireframe
 
@@ -503,9 +508,20 @@ This checklist allows reviewers, technical artists, and outsourcing managers to 
 └────────────────────────────────────────┴───────────────────────────────┘
 ```
 
+### Final Asset Sign-Off Checklist
+Before any asset is finalized and loaded into the manifest, it must receive a pass signature under these verification points:
+*   `[ ]` **Correct Dimensions**: Texture resolution matches the pixel bounds in Section 15.
+*   `[ ]` **Correct Pivot**: Origin settings in the resource manifest map directly to the coordinates in Section 15.
+*   `[ ]` **Correct Outline Width**: Interactive targets carry a $2\text{px}$ or $3\text{px}$ line weight outline.
+*   `[ ]` **Correct Palette**: Element colors map strictly to the script values in Section 11.
+*   `[ ]` **Correct Layer Assignment**: Draw layers match the hierarchy bounds in Section 14.
+*   `[ ]` **Atlas Compliant**: Bounding box size fits grid boundaries inside sheet templates.
+*   `[ ]` **Naming Convention Compliant**: Resource filenames match the prefix taxonomy in Section 19.
+*   `[ ]` **Exported PNG RGBA**: Delivered as a 32-bit format image carrying alpha channels with pre-multiplied alpha values.
+
 ---
 
-## 14. Asset Layering Specification
+## 14. Asset Draw Layering Specification
 
 All game objects and rendering passes must be sorted and submitted to the SFML render tree strictly according to these depth layers. This ensures absolute consistency across the rendering pipeline and headless simulation:
 
@@ -608,7 +624,96 @@ For all animated sheets (cannon recoil, powerup rotation, boss core pulses), ass
 
 ---
 
-## 19. Art Baseline Freeze Rules
+## 19. Asset Manifest Registry
+
+All asset files must reside under the correct subdirectory of the `assets/` root. Filenames must use the canonical lowercase snake_case formats specified below to ensure automated scripts can map assets cleanly:
+
+```
+assets/
+ ├── sprites/
+ │    ├── brick_standard.png
+ │    ├── brick_armored.png
+ │    ├── brick_explosive.png
+ │    ├── brick_unbreakable.png
+ │    ├── cannon_chassis.png
+ │    └── cannon_barrel.png
+ ├── ui/
+ │    ├── hud_panel_frame.png
+ │    ├── button_action.png
+ │    └── font_orbitron.ttf
+ ├── vfx/
+ │    ├── particle_shard.png
+ │    └── spritesheet_glitch_scanline.png
+ ├── powerups/
+ │    ├── powerup_multishot.png
+ │    ├── powerup_laser.png
+ │    └── powerup_shield.png
+ ├── bosses/
+ │    ├── boss_core_nexus.png
+ │    └── boss_shield_plate.png
+ └── backgrounds/
+      ├── starfield_stars.png
+      └── space_nebula.png
+```
+
+---
+
+## 20. Collision Baseline Sheet
+
+To prevent mechanical decoupling between physics simulation boundaries and rendering views, collision shapes are locked to these metrics. View classes must scale visual sprites to match these boxes:
+
+```
+┌───────────────────────┬──────────────┬───────────────────┬────────────────────────┐
+│ ENTITY                │ VISUAL SIZE  │ COLLISION SHAPE   │ SIZE / BOUNDARY OFFSETS│
+├───────────────────────┼──────────────┼───────────────────┼────────────────────────┤
+│ Cannon Assembly       │ 128px x 128px│ Rectangle Box     │ Width: 120px,          │
+│                       │              │                   │ Height: 48px.          │
+│                       │              │                   │ Offset: (4, 80)        │
+├───────────────────────┼──────────────┼───────────────────┼────────────────────────┤
+│ Standard / Armored /  │ 64px x 32px  │ Rectangle Box     │ Width: 64px,           │
+│ Explosive Bricks      │              │                   │ Height: 32px.          │
+│                       │              │                   │ Offset: (0, 0)         │
+├───────────────────────┼──────────────┼───────────────────┼────────────────────────┤
+│ Projectile            │ 16px x 16px  │ Circle (Radius)   │ Radius: 7px.           │
+│                       │              │                   │ Offset: Center (8, 8)  │
+├───────────────────────┼──────────────┼───────────────────┼────────────────────────┤
+│ Powerup Canister      │ 32px x 48px  │ Rectangle Box     │ Width: 28px,           │
+│                       │              │                   │ Height: 44px.          │
+│                       │              │                   │ Offset: (2, 2)         │
+├───────────────────────┼──────────────┼───────────────────┼────────────────────────┤
+│ Boss Shield Segment   │ 128px x 24px  │ Rectangle Box     │ Width: 128px,          │
+│                       │              │                   │ Height: 24px.          │
+│                       │              │                   │ Offset: (0, 0)         │
+└───────────────────────┴──────────────┴───────────────────┴────────────────────────┘
+```
+
+---
+
+## 21. Spatial Spawn & Placement Safe-Zones
+
+To prevent wave initialization overlaps and coordinate collisions, the arena layout enforces the following vertical zones along the $Y$-axis:
+
+```
+Y = 0px ───────────────────────────────────────────────────────────────────────────
+   │ [Top Safe Zone] - Y = 0px to 40px (HUD margin space, no entity placement)      │
+Y = 40px ──────────────────────────────────────────────────────────────────────────
+   │ [Top Spawn Band] - Y = 40px to 160px (Wave initialization transition area)     │
+   ├──────────────────────────────────────────────────────────────────────────────┤
+   │ [Boss Zone] - Y = 80px to 300px (Restricted boss rotation boundary range)    │
+   ├──────────────────────────────────────────────────────────────────────────────┤
+   │ [Brick Placement Zone] - Y = 80px to 600px (Active grid limits for bricks)   │
+   │                                                                              │
+   │ [Powerup Spawns]: Centered on the parent brick origin during destruction.    │
+Y = 900px ─────────────────────────────────────────────────────────────────────────
+   │ [Player Zone] - Y = 900px to 1040px (Horizontal Cannon containment boundary) │
+Y = 1040px ────────────────────────────────────────────────────────────────────────
+   │ [Bottom Safe Zone] - Y = 1040px to 1080px (Screen footer, no gameplay elements)│
+Y = 1080px ────────────────────────────────────────────────────────────────────────
+```
+
+---
+
+## 22. Art Baseline Freeze Rules
 
 To ensure that the visual pipeline remains stable and assets remain consistent across multiple development environments, the following rules are **frozen** and cannot be changed without an official Art Direction revision process:
 
