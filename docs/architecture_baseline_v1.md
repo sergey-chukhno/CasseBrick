@@ -1,4 +1,10 @@
 # Architecture Baseline v1.0
+## 0. Baseline Metadata
+
+Version: 1.0
+Status: Frozen
+Freeze Date: YYYY-MM-DD
+Superseded By: N/A
 
 ## 1. Purpose
 
@@ -15,7 +21,7 @@ The Cyberpunk Cannon Shooter engine is built on a highly modular, decoupled arch
 *   **Gameplay / Rendering Separation (Model-View Separation)**:
     The core gameplay logic operates inside a dedicated static library (`GameplayCore`). Gameplay simulation classes (e.g., `Cannon`, `Brick`, `Projectile`, `GameplayWorld`) contain only mathematical models, coordinates, velocities, and bounds calculations. They have no references to SFML graphics headers (`sf::Sprite`, `sf::Shape`, `sf::RenderWindow`) or drawing functions. Separated View classes (e.g., `CannonView`, `BrickView`) observe the models using read-only `const` references and submit draw commands to the rendering pipeline, enabling headless unit testing.
 *   **Event System (Decoupled Message Bus)**:
-    Subsystems communicate asynchronously and dynamically via a synchronous event dispatcher (`EventDispatcher`). Gameplay simulation events (such as a projectile firing or a brick breaking) are emitted as Plain Old Data (POD) structs. Auxiliary systems (such as `ScoreSystem` or `AudioSystem`) subscribe callback methods to these event types, eliminating class-level coupling and keeping side-effects isolated from the simulation loop.
+    Subsystems communicate through a synchronous event dispatcher(`EventDispatcher`). Gameplay simulation events (such as a projectile firing or a brick breaking) are emitted as Plain Old Data (POD) structs. Auxiliary systems (such as `ScoreSystem` or `AudioSystem`) subscribe callback methods to these event types, eliminating class-level coupling and keeping side-effects isolated from the simulation loop.
 *   **Persistence Architecture**:
     The persistence pipeline is isolated from gameplay states using interface-driven boundaries. High-level game configurations and progression maps are managed by `SaveManager` which directs serialization through `PersistenceService`. Disk writes are executed by an abstract provider (`IPersistenceProvider`) using concrete implementations (like `DiskPersistenceProvider` with temp-write, verify, and atomic rename pipelines) to guarantee transaction integrity and enable filesystem-free unit testing via in-memory stubs.
 *   **Resource Management Architecture**:
@@ -54,7 +60,7 @@ The following table lists the active and frozen Architecture Decision Records:
 | :---: | :--- | :---: | :--- |
 | **ADR-0001** | [Screen Routing via State Stack](adr/ADR-0001-state-stack.md) | **ACCEPTED** | Decouples high-level screen states and provides overlapping pause structures. |
 | **ADR-0002** | [Entity-View Separation](adr/ADR-0002-entity-view-separation.md) | **ACCEPTED** | Isolates game physics and math from SFML drawing libraries for headless testing. |
-| **ADR-0003** | [Dependency-Injected Resource Manager](adr/ADR-0003-resource-manager.md) | **ACCEPTED** | Buns singletons, injecting instanced cache managers using manifest string IDs. |
+| **ADR-0003** | [Dependency-Injected Resource Manager](adr/ADR-0003-resource-manager.md) | **ACCEPTED** | Bans singletons, injecting instanced cache managers using manifest string IDs. |
 | **ADR-0004** | [Synchronous Event Dispatcher](adr/ADR-0004-event-system.md) | **ACCEPTED** | Decouples simulation triggers from side-effects via synchronous template broadcasting. |
 | **ADR-0005** | [Decoupled Persistence Architecture](adr/ADR-0005-persistence-architecture.md) | **ACCEPTED** | Separates filesystem operations from game states, ensuring atomic writes. |
 
