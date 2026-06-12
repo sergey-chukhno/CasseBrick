@@ -137,6 +137,8 @@ To guarantee absolute visual consistency and high-speed gameplay readability, th
 │                 │         │                   │ canisters, critical warnings.
 │ Reward (Green)  │ #06ffa5 │ HSL(157, 100%, 50%)│ Score animations,      │
 │                 │         │                   │ level clears, health up.
+│ Metallic Gold   │ #e5c158 │ HSL(45, 76%, 63%)  │ Unbreakable Bricks,    │
+│                 │         │                   │ rare Boss armor.       │
 │ Dark BG (Void)  │ #0a0a1a │ HSL(240, 44%, 7%)  │ Pitch-black workspace, │
 │                 │         │                   │ virtual canvas.        │
 └─────────────────┴─────────┴───────────────────┴────────────────────────┘
@@ -294,7 +296,7 @@ Bricks are categorized by structural type, each carrying a unique visual treatme
 *   **Visual Identity**: Heavy, multi-segmented digital fortresses.
 *   **Materials**: Dark carbon-fiber plates overlaying glowing core systems.
 *   **Detail Density**: Extremely high. Exposed circuitry, glowing heat-sinks, and rotating armor plates.
-*   **Silhouette Rules**: A central core protected by independent, rotating shield segments.
+*   **Silhouette Rules**: A central core protected by independent, rotating shield segments (modeled strictly as angular segmented octagonal plates; curves are prohibited).
 
 ---
 

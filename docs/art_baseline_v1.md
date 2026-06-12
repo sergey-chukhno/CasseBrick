@@ -78,7 +78,7 @@ The Golden Screenshot represents the absolute target visual composition of the g
 
 ### Visual Hierarchy & Elements Distribution
 1.  **Level 1 (Highest Focus - gameplay elements)**:
-    *   **Projectiles**: Circle shape, active outer glow, diameter $16\text{px}$. Pure orange core (`#ff8800`).
+    *   **Projectiles**: Circle shape, active outer glow, diameter $16\text{px}$. Bright orange core (`#ff8800`).
     *   **Bricks**: Sharp borders ($3\text{px}$ line weight). Standard: Cyan (`#00d9ff`), Armored: Pink (`#ff006e`), Explosive: Orange (`#ff8800`).
 2.  **Level 2 (Mid Focus - interaction sources)**:
     *   **The Cannon**: Clean, dark grey metal structure (`#121224`) framed by a $2\text{px}$ Cyan outline. Exposed central core pulses between pink and cyan.
@@ -109,7 +109,8 @@ The Cannon is the player's primary anchor. It represents a heavy, retro-futurist
 │             │ vents release orange sparks.    │ flash, decaying over 100ms.    │
 ├─────────────┼─────────────────────────────────┼────────────────────────────────┤
 │ Damaged     │ Sparks flicker; scanline glitches│ Grid pattern breaks on body;   │
-│             │ intersect the outline.          │ color changes from Cyan to Red.│
+│             │ intersect the outline.          │ color changes from Cyan to     │
+│             │                                 │ Pink (#ff006e).                │
 └─────────────┴─────────────────────────────────┴────────────────────────────────┘
 ```
 
@@ -137,7 +138,7 @@ The Cannon is the player's primary anchor. It represents a heavy, retro-futurist
 
 ### Implementation Notes for Artists
 *   **Dimensions**: Must fit exactly within a $128\text{px} \times 128\text{px}$ frame. Anchor point: Bottom Center ($64, 128$).
-*   **Materials**: Anodized charcoal metal plates (`#121224`) with highly polished surface gloss highlights. Under-lighting must project a subtle cyan reflection on the gameplay floor.
+*   **Materials**: Anodized charcoal metal plates (`#121224`) with highly polished surface gloss highlights. Under-lighting is represented strictly by a local glow halo beneath the Cannon chassis (no physical floor reflections).
 *   **Lines**: Outer profile lines must be kept at a clean $2\text{px}$ width. Avoid soft, painted gradients.
 
 ---
@@ -181,7 +182,7 @@ Bricks represent structural obstacles that the player shatters. Every brick cate
 *   **Fill**: Solid dark charcoal carbon texture (`#1f1f2e`). No interior glow.
 
 ### Boss Shield Segment Specification
-*   **Silhouette**: Arc-curved polygon segment designed to rotate in orbits around the central boss core.
+*   **Silhouette**: Angular segmented octagonal plates designed to rotate in orbits around the central boss core. Curves are strictly prohibited.
 *   **Dimensions**: $128\text{px} \times 24\text{px}$ bounding box.
 *   **Borders**: Thick $3\text{px}$ line weight in secondary Pink (`#ff006e`).
 *   **Fill**: Honeycomb structure visible through a semi-transparent glass panel.
@@ -193,8 +194,8 @@ Bricks represent structural obstacles that the player shatters. Every brick cate
 Projectiles are high-velocity energy spheres designed to pierce or bounce off data cores.
 
 ```
-       ( Core Area )   ──► Circle shape, 6px diameter. Color: White (#ffffff)
-       ( Plasma Envelope ) ──► Outer Ring, 16px diameter. Color: Orange (#ff8800)
+       ( Core Area )   ──► Circle shape, 6px diameter. Color: Orange (#ff8800)
+       ( Plasma Envelope ) ──► Outer Ring, 16px diameter. Color: Orange (#ff8800) [Additive Glow]
        ( Motion Trail ) ──► Tapering polygon, 8-frame memory history.
 ```
 
@@ -202,8 +203,8 @@ Projectiles are high-velocity energy spheres designed to pierce or bounce off da
 *   **Shape**: Perfect circle (provides highest contrast against brick angles).
 *   **Diameter**: $16\text{px}$.
 *   **Colors**:
-    *   **Core**: Pure White (`#ffffff`), $6\text{px}$ diameter.
-    *   **Envelope**: Intense Orange (`#ff8800`), fading to red at the outer edge.
+    *   **Core**: Bright Orange (`#ff8800`), $6\text{px}$ diameter. Pure white (`#ffffff`) is prohibited and reserved strictly for impact flashes, critical flashes, and boss hits.
+    *   **Envelope**: Intense Orange (`#ff8800`) with additive glow layering, fading to deep orange/red-orange (`#ff4400`) at the outer edge.
 *   **Trail**: Constructed from 8 historical segment coordinates. Trail width reduces from $16\text{px}$ down to $0\text{px}$ at the trailing node. Opacity fades linearly:
 
 $$\text{Opacity}(n) = 1.0 - \left(\frac{n}{8}\right)$$
@@ -411,6 +412,9 @@ To prevent visual drift across development platforms, artists must utilize these
 ├──────────────┼─────────┼───────────────────┼───────────────────┼──────────────┤
 │ Reward       │ #06ffa5 │ RGB(6, 255, 165)  │ HSL(157, 100%, 50%)│ Score Popups │
 ├──────────────┼─────────┼───────────────────┼───────────────────┼──────────────┤
+│ Metallic Gold│ #e5c158 │ RGB(229, 193, 88) │ HSL(45, 76%, 63%)  │ Unbreakable  │
+│              │         │                   │                   │ Bricks/Armor │
+├──────────────┼─────────┼───────────────────┼───────────────────┼──────────────┤
 │ Void BG      │ #0a0a1a │ RGB(10, 10, 26)   │ HSL(240, 44%, 7%)  │ Canvas Fill  │
 └──────────────┴─────────┴───────────────────┴───────────────────┴──────────────┘
 ```
@@ -501,7 +505,110 @@ This checklist allows reviewers, technical artists, and outsourcing managers to 
 
 ---
 
-## 14. Art Baseline Freeze Rules
+## 14. Asset Layering Specification
+
+All game objects and rendering passes must be sorted and submitted to the SFML render tree strictly according to these depth layers. This ensures absolute consistency across the rendering pipeline and headless simulation:
+
+```
+┌─────────────┬──────────────────────────┬──────────────────────────────────────┐
+│ LAYER INDEX │ LAYER NAME               │ RENDERED ENTITIES                    │
+├─────────────┼──────────────────────────┼──────────────────────────────────────┤
+│ Layer 00    │ Background Void          │ Pitch black (#0a0a1a) window clear.  │
+├─────────────┼──────────────────────────┼──────────────────────────────────────┤
+│ Layer 10    │ Nebula                   │ Soft purple node halos (5% opacity). │
+├─────────────┼──────────────────────────┼──────────────────────────────────────┤
+│ Layer 20    │ Stars                    │ Drifting octagonal stars (15% opac). │
+├─────────────┼──────────────────────────┼──────────────────────────────────────┤
+│ Layer 30    │ Grid                     │ Static playfield axes grid (10% opac)│
+├─────────────┼──────────────────────────┼──────────────────────────────────────┤
+│ Layer 40    │ Bricks                   │ Active bricks, armored plates, boss. │
+├─────────────┼──────────────────────────┼──────────────────────────────────────┤
+│ Layer 50    │ Powerups                 │ Descending Hex canisters.            │
+├─────────────┼──────────────────────────┼──────────────────────────────────────┤
+│ Layer 60    │ Cannon                   │ Chassis base, barrel, active core.   │
+├─────────────┼──────────────────────────┼──────────────────────────────────────┤
+│ Layer 70    │ Projectile Trails        │ Dotted targets, vector line histories.│
+├─────────────┼──────────────────────────┼──────────────────────────────────────┤
+│ Layer 80    │ Projectiles              │ Circular orange energy bullets.      │
+├─────────────┼──────────────────────────┼──────────────────────────────────────┤
+│ Layer 90    │ VFX                      │ Shatter shards, ring pulses, flashes.│
+├─────────────┼──────────────────────────┼──────────────────────────────────────┤
+│ Layer 100   │ HUD                      │ Score, levels, settings boxes.       │
+├─────────────┼──────────────────────────┼──────────────────────────────────────┤
+│ Layer 110   │ Debug                    │ Physics vectors, Bounding box outlines│
+└─────────────┴──────────────────────────┴──────────────────────────────────────┘
+```
+
+---
+
+## 15. Sprite Pivot Reference Sheet
+
+To prevent visual offsets, collision offsets, and animation alignment bugs at runtime, all sprites must utilize these standardized origins and anchors:
+
+```
+┌───────────────────────┬──────────────┬───────────────┬────────────────────────┐
+│ ASSET CATEGORY        │ SHEET SIZE   │ PIVOT / ORIGIN│ TARGET ANCHOR LOCATION │
+├───────────────────────┼──────────────┼───────────────┼────────────────────────┤
+│ Cannon Chassis        │ 128px x 128px│ (64, 128)     │ Bottom center.         │
+├───────────────────────┼──────────────┼───────────────┼────────────────────────┤
+│ Standard / Armored    │ 64px x 32px  │ (32, 16)      │ True center.           │
+├───────────────────────┼──────────────┼───────────────┼────────────────────────┤
+│ Projectile            │ 16px x 16px  │ (8, 8)        │ True center.           │
+├───────────────────────┼──────────────┼───────────────┼────────────────────────┤
+│ Powerup Canister      │ 32px x 48px  │ (16, 24)      │ True center.           │
+├───────────────────────┼──────────────┼───────────────┼────────────────────────┤
+│ Boss Shield Segment   │ 128px x 24px  │ (64, 12)      │ True center.           │
+├───────────────────────┼──────────────┼───────────────┼────────────────────────┤
+│ VFX Particle Shard    │ 4px x 4px    │ (2, 2)        │ True center.           │
+└───────────────────────┴──────────────┴───────────────┴────────────────────────┘
+```
+
+---
+
+## 16. Texture & Performance Budget Sheet
+
+To guarantee that the game maintains a locked 60+ FPS on target low-spec devices and prevents memory leaks, assets must comply with these budgets:
+
+*   **Total VRAM Allocation**: Maximum $128\text{ MB}$.
+*   **Texture Atlas Dimension**: Maximum $1024\text{px} \times 1024\text{px}$ (all static sprites and UI panels must fit on one sheet).
+*   **Maximum Single Sprite File Dimension**: $512\text{px} \times 512\text{px}$.
+*   **Maximum Active Particles per Frame**: $500$ particles active globally. Excess particle emissions are culled automatically via age-based recycling.
+*   **Peak Draw Calls per Frame**: $< 50$ draw calls (enforced by batching grid lines and static blocks inside a single `sf::VertexArray`).
+
+---
+
+## 17. Glow Rendering Standard
+
+Glow and bloom shaders must follow this exact multi-pass blending structure to ensure rendering consistency:
+
+```
+   [ Raw Vector Shape ] (Normal Pass)
+            │
+            ├──► Glow Pass 1: 100% Opacity ──► Blur Radius: 4px  ──► Additive Blend
+            │
+            ├──► Glow Pass 2: 60% Opacity  ──► Blur Radius: 8px  ──► Additive Blend
+            │
+            └──► Glow Pass 3: 20% Opacity  ──► Blur Radius: 12px ──► Additive Blend
+```
+
+*   **Shader Execution**: The fragment shader performs three Gaussian blur iterations on the source texture, scaling the radius and multiplying the output colors using additive weights (`1.0`, `0.6`, `0.2`) before presentation.
+
+---
+
+## 18. Sprite Sheet Standards
+
+For all animated sheets (cannon recoil, powerup rotation, boss core pulses), assets must follow these layout metrics:
+
+*   **Frame Size**: Standardized per animation set (e.g., $128\text{px} \times 128\text{px}$ frames for Cannon recoil).
+*   **Frame Padding**: $2\text{px}$ empty spacing between frames to prevent texture bleeding under scaling.
+*   **Margin**: $0\text{px}$ margin on sheet borders.
+*   **Naming Convention**:
+    *   `spritesheet_[category]_[asset_name]_[width]x[height]_[frames].png`
+    *   *Example*: `spritesheet_cannon_recoil_128x128_8.png` (8 sequential horizontal frames of recoil animation).
+
+---
+
+## 19. Art Baseline Freeze Rules
 
 To ensure that the visual pipeline remains stable and assets remain consistent across multiple development environments, the following rules are **frozen** and cannot be changed without an official Art Direction revision process:
 
